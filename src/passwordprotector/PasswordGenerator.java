@@ -1,19 +1,22 @@
 package passwordprotector;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
-import java.util.stream.IntStream;
 
 public class PasswordGenerator {
-	
-
-	
 	private Random randomNumberGenerator;
-	private List<ValidCharacters> validCharacters;
+	private ArrayList<ValidCharacters> validCharacters;
 
-	public PasswordGenerator(long seed, List<ValidCharacters> validChararcters) {
+	public PasswordGenerator(long seed, ArrayList<ValidCharacters> validChararcters) {
 		this.randomNumberGenerator = new Random(seed);
 		this.validCharacters = validCharacters;
+	}
+	
+	public PasswordGenerator() {
+		this.randomNumberGenerator = new Random(System.currentTimeMillis());
+		this.validCharacters = new ArrayList<ValidCharacters>();
 	}
 	
 	public void reseed(long seed) {
@@ -31,10 +34,29 @@ public class PasswordGenerator {
 	}
 	
 	public String generatePassword(int length) {
-		char[] validChoices;
+		List<Character> validChoices = new ArrayList<Character>();
 		for ( ValidCharacters v : validCharacters) {
-			
+			switch(v) {
+				case LOWERCASE:
+					validChoices.addAll(Arrays.asList('a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z'));
+					break;
+				case UPPERCASE:
+					validChoices.addAll(Arrays.asList('A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'));
+					break;
+				case NUMBERS:
+					validChoices.addAll(Arrays.asList('1','2','3','4','5','6','7','8','9','0'));
+					break;
+				case SYMBOLS:
+					validChoices.addAll(Arrays.asList('~','`','!','@','#','$','%','^','&','*','(',')','-','_','+','=','}','{','[',']','\"','\'','\\','|','/','?','>','<','.',','));
+					break;
+				default:
+					break;
+			}
 		}
-		return "";
+		String password = new String();
+		for ( int i = 0; i < length; i++ ) {
+			password += validChoices.get(this.randomNumberGenerator.nextInt(validChoices.size()));
+		}
+		return password;
 	}
 }
