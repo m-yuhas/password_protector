@@ -15,7 +15,9 @@ public class PasswordProtector {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
+		PasswordProtectorGUI ppGui = new PasswordProtectorGUI();
+		
+		/*
 		System.out.println("Hello World");
 		PasswordGenerator pg = new PasswordGenerator();
 		pg.addValidCharacters(ValidCharacters.LOWERCASE);
@@ -23,6 +25,7 @@ public class PasswordProtector {
 		System.out.println(pg.generatePassword(10));
 		pg.addValidCharacters(ValidCharacters.NUMBERS);
 		System.out.println(pg.generatePassword(12));
+		*/
 	}
 	
 	private static void parseArgs(String[] args) {
