@@ -1,6 +1,13 @@
 package passwordprotectorlauncher;
 
+import java.awt.Desktop;
+
+import java.io.File;
+import java.io.IOException;
+
 import javafx.application.Application;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -9,6 +16,8 @@ import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.RowConstraints;
 import javafx.stage.Stage;
+import javafx.stage.FileChooser;
+
 
 public class PasswordProtectorLauncher extends Application {
 
@@ -31,6 +40,7 @@ public class PasswordProtectorLauncher extends Application {
 		ColumnConstraints col1 = new ColumnConstraints();
 		RowConstraints row0 = new RowConstraints();
 		RowConstraints row1 = new RowConstraints();
+		FileChooser fileChooser = new FileChooser();
 		col0.setPercentWidth(15);
 		col1.setPercentWidth(85);
 		row0.setPercentHeight(25);
@@ -42,6 +52,16 @@ public class PasswordProtectorLauncher extends Application {
 		buttonPane.add(saveButton, 0, 2);
 		buttonPane.add(helpButton, 0, 3);
 		buttonPane.add(aboutButton, 0, 4);
+		openButton.setOnAction(
+				new EventHandler<ActionEvent>() {
+					@Override
+					public void handle(final ActionEvent e) {
+						File file = fileChooser.showOpenDialog(primaryStage);
+						if (file != null) {
+							openFile(file);
+						}
+					}
+				});
 		mainGrid.setPadding(new Insets(10, 10, 10, 10));
 		mainGrid.setPadding(new Insets(10, 10, 10, 10));
 		mainGrid.getColumnConstraints().addAll(col0, col1);
@@ -54,6 +74,16 @@ public class PasswordProtectorLauncher extends Application {
 		primaryStage.setTitle("Password Protector");
 		primaryStage.setScene(mainScene);
 		primaryStage.show();
+	}
+	
+	private void openFile(File file) {
+		Desktop desktop = Desktop.getDesktop();
+		try {
+			desktop.open(file);
+		} catch (IOException ex) {
+			System.out.println("Error Opening File");
+			//TODO: Make this more robust (GUI + Logging)
+		}
 	}
 
 }
