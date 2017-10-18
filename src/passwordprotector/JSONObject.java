@@ -72,4 +72,54 @@ public class JSONObject {
 		return JSONDataType.NULL; //TODO implement
 	}
 	
+	private int parseJSONObject(String s) throws InvalidJSONException {
+		if (!s.startsWith("{") || !s.endsWith("}")) {
+			throw new InvalidJSONException("Malformed JSON Object: Missing Starting or Ending Brace");
+		}
+		s = s.substring(1, s.length()-2);
+		int i;
+		for (i = 0; i < s.length(); i++) {
+			
+		}
+		return i;
+	}
+	
+	private int parseValue(String s) {
+		int i;
+		for (i = 0; i < s.length(); i++) {
+			
+		}
+		return i;
+	}
+	
+	private int parseString(String s) throws InvalidJSONException {
+		if (!s.startsWith("\"") || !s.endsWith("\"")) {
+			throw new InvalidJSONException("Malformed JSON Object: Missing Quotation Mark");
+		}
+		int i;
+		for (i = 0; i < s.length(); i++) {
+			
+		}
+		return i;
+	}
+	
+	private int parseNumber(String s) {
+		int i;
+		for (i = 0; i < s.length(); i++) {
+			
+		}
+		return i;
+	}
+	
+	private int parseArray(String s) throws InvalidJSONException {
+		if (!s.startsWith("[") || !s.endsWith("]")) {
+			throw new InvalidJSONException("Malformed JSON Object: Array Missing [ or ]");
+		}
+		int i;
+		for (i = 0; i < s.length(); i++) {
+			
+		}
+		return i;
+	}
+	
 }
