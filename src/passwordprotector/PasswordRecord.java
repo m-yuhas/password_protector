@@ -49,7 +49,7 @@ public class PasswordRecord {
 		return this.userName;
 	}
 	
-	public String getPlainTextPasswor( String key ) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
+	public String getPlainTextPassword( String key ) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
 		SecureRandom secureRandom = new SecureRandom(key.getBytes());
 		KeyGenerator keyGenerator = KeyGenerator.getInstance("twofish");
 		keyGenerator.init(secureRandom);
@@ -57,5 +57,9 @@ public class PasswordRecord {
 		Cipher cipher = Cipher.getInstance("twofish");
 		cipher.init(Cipher.DECRYPT_MODE, secretKey);
 		return new String(cipher.doFinal(this.cypherTextPassword)); //TODO Try Catch
+	}
+	
+	public String getCypherTextPassword() {
+		return new String(this.cypherTextPassword);
 	}
 }

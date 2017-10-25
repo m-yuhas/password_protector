@@ -78,8 +78,13 @@ public class JSONObject {
 		}
 		s = s.substring(1, s.length()-2);
 		int i;
+		ParseJSONState state = ParseJSONState.KEY;
 		for (i = 0; i < s.length(); i++) {
-			
+			try {
+				parseString(s);
+			} catch (Exception e) {
+				throw e; 
+			}
 		}
 		return i;
 	}
