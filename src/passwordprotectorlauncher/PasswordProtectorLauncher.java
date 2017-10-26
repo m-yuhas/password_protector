@@ -3,7 +3,16 @@ package passwordprotectorlauncher;
 import java.awt.Desktop;
 
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.Optional;
+
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 
 import javafx.application.Application;
 import javafx.event.ActionEvent;
@@ -12,10 +21,13 @@ import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TextInputDialog;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.RowConstraints;
 import javafx.stage.Stage;
+import passwordprotector.PasswordProtector;
+import passwordprotector.PasswordRecord;
 import javafx.stage.FileChooser;
 
 
@@ -77,12 +89,34 @@ public class PasswordProtectorLauncher extends Application {
 	}
 	
 	private void openFile(File file) {
-		Desktop desktop = Desktop.getDesktop();
+		char[] fileContents = new char[10000]; //TODO: Handle Buffer overruns
 		try {
-			desktop.open(file);
-		} catch (IOException ex) {
+			FileReader fileReader = new FileReader(file);
+
+			fileReader.read(fileContents);
+			fileReader.close();
+			String key = getFilePassword();
+			ArrayList<PasswordRecord> passwordList = PasswordProtector.parseSecurePasswordString(new String(fileContents), key);
+		} catch (IOException e) {
 			System.out.println("Error Opening File");
 			//TODO: Make this more robust (GUI + Logging)
+		} catch (InvalidUserInputException e) {
+			System.out.println("Need to have Password");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+	}
+	
+	private String getFilePassword() throws InvalidUserInputException {
+		TextInputDialog dialog = new TextInputDialog();
+		dialog.setTitle("Unlock Password File");
+		dialog.setHeaderText("You will need to unlock this password record file!");
+		dialog.setContentText("Enter key to unlock file:");
+		Optional<String> result = dialog.showAndWait();
+		if (result.isPresent()) {
+			return result.get();
+		} else {
+			throw new InvalidUserInputException("Password Required To Unlock File");
 		}
 	}
 

@@ -47,7 +47,7 @@ public class PasswordProtector {
 		return;
 	}
 	
-	public ArrayList<PasswordRecord> parseSecurePasswordFile(String fileName, String key) throws IOException, InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException {
+	public static ArrayList<PasswordRecord> parseSecurePasswordFile(String fileName, String key) throws IOException, InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException {
 		char[] fileContents = null;
 		File file = new File(fileName);
 		FileReader fileReader = new FileReader(file);
@@ -56,7 +56,7 @@ public class PasswordProtector {
 		return parseSecurePasswordString(new String(fileContents), key);
 	}
 	
-	public ArrayList<PasswordRecord> parseSecurePasswordString( String fileContents, String key ) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
+	public static ArrayList<PasswordRecord> parseSecurePasswordString( String fileContents, String key ) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
 		SecureRandom secureRandom = new SecureRandom(key.getBytes());
 		KeyGenerator keyGenerator = KeyGenerator.getInstance("twofish");
 		keyGenerator.init(secureRandom);
@@ -74,7 +74,7 @@ public class PasswordProtector {
 		return passwordRecordsArrayList;
 	}
 	
-	public void writeSecurePasswordFile( ArrayList<PasswordRecord> passwordRecordList, String filename, String key ) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, IOException {
+	public static void writeSecurePasswordFile( ArrayList<PasswordRecord> passwordRecordList, String filename, String key ) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, IOException {
 		String fileString = new String("");
 		for ( PasswordRecord passwordRecord : passwordRecordList ) {
 			fileString = fileString + passwordRecord.getAccountType() + "," + passwordRecord.getUserName() + "," + passwordRecord.getCypherTextPassword() + ";";
