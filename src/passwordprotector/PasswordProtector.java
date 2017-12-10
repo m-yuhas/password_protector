@@ -32,7 +32,7 @@ public class PasswordProtector {
 	 */
 	public static void main(String[] args) {
 		
-		
+		/*
 		System.out.println("Hello World");
 		PasswordGenerator pg = new PasswordGenerator();
 		pg.addValidCharacters(ValidCharacters.LOWERCASE);
@@ -40,11 +40,7 @@ public class PasswordProtector {
 		System.out.println(pg.generatePassword(10));
 		pg.addValidCharacters(ValidCharacters.NUMBERS);
 		System.out.println(pg.generatePassword(12));
-		
-	}
-	
-	private static void parseArgs(String[] args) {
-		return;
+		*/
 	}
 	
 	public static ArrayList<PasswordRecord> parseSecurePasswordFile(String fileName, String key) throws IOException, InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException {
@@ -58,10 +54,10 @@ public class PasswordProtector {
 	
 	public static ArrayList<PasswordRecord> parseSecurePasswordString( String fileContents, String key ) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
 		SecureRandom secureRandom = new SecureRandom(key.getBytes());
-		KeyGenerator keyGenerator = KeyGenerator.getInstance("twofish");
+		KeyGenerator keyGenerator = KeyGenerator.getInstance("Blowfish");
 		keyGenerator.init(secureRandom);
 		SecretKey secretKey = keyGenerator.generateKey();
-		Cipher cipher = Cipher.getInstance("twofish");
+		Cipher cipher = Cipher.getInstance("Blowfish/CBC/PKCS5Padding");
 		cipher.init(Cipher.DECRYPT_MODE, secretKey);
 		String decryptedFileContents = new String(cipher.doFinal(fileContents.getBytes()));
 		String[] records = decryptedFileContents.split(";");
@@ -80,10 +76,10 @@ public class PasswordProtector {
 			fileString = fileString + passwordRecord.getAccountType() + "," + passwordRecord.getUserName() + "," + passwordRecord.getCypherTextPassword() + ";";
 		}
 		SecureRandom secureRandom = new SecureRandom(key.getBytes());
-		KeyGenerator keyGenerator = KeyGenerator.getInstance("twofish");
+		KeyGenerator keyGenerator = KeyGenerator.getInstance("Blowfish");
 		keyGenerator.init(secureRandom);
 		SecretKey secretKey = keyGenerator.generateKey();
-		Cipher cipher = Cipher.getInstance("twofish");
+		Cipher cipher = Cipher.getInstance("Blowfish/CBC/PKCS5Padding");
 		cipher.init(Cipher.ENCRYPT_MODE, secretKey);
 		String encryptedFileString = new String(cipher.doFinal(fileString.getBytes()));
 		File file = new File(filename);

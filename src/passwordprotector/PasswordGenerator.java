@@ -9,7 +9,7 @@ public class PasswordGenerator {
 	private Random randomNumberGenerator;
 	private ArrayList<ValidCharacters> validCharacters;
 
-	public PasswordGenerator(long seed, ArrayList<ValidCharacters> validChararcters) {
+	public PasswordGenerator(long seed, ArrayList<ValidCharacters> validCharacters) {
 		this.randomNumberGenerator = new Random(seed);
 		this.validCharacters = validCharacters;
 	}
