@@ -1,3 +1,10 @@
+/**
+ * The passwordprotectorcli package can be bundled as a jar to run the passwordprotector application on any system with JRE1.8 or higher installed.
+ * 
+ * @author	Michael Yuhas
+ * @since	0.1
+ * @version	0.1
+ */
 package passwordprotectorcli;
 
 import java.io.Console;
@@ -8,19 +15,33 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Scanner;
-
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
-
 import passwordprotector.PasswordRecord;
 import passwordprotector.ValidCharacters;
 import passwordprotector.PasswordGenerator;
 import passwordprotector.PasswordProtector;
 
+/**
+ * The PasswordProtectorCLI class implements a command line application to encrypt and decrypt password records.
+ * 
+ * @author 	Michael Yuhas
+ * @since	0.1
+ * @version	0.1
+ */
 public class PasswordProtectorCLI {
+	
 	static ArrayList<PasswordRecord> passwordRecordArray;
 
+	/**
+	 * The main method is the entry point for this command line application
+	 * 
+	 * @author	Michael Yuhas
+	 * @since	0.1
+	 * @version	0.1
+	 * @param	args	array of command line arguments
+	 */
 	public static void main(String[] args) {
 		try {
 			parseArgs(args);
@@ -29,16 +50,7 @@ public class PasswordProtectorCLI {
 				| BadPaddingException | IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}
-		/* 
-		Console console = System.console();
-		if (console == null) {
-			System.out.println("Couldn't get Console instance");
-			return;
-		}
-		char passwordBytes[] = console.readPassword("Enter the file password: ");
-		ArrayList<PasswordRecord> passwordRecordArray;
-		*/ catch (Exception e) {
+		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
