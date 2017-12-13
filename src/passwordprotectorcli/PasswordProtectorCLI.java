@@ -32,6 +32,7 @@ import passwordprotector.PasswordProtector;
  */
 public class PasswordProtectorCLI {
 	
+	static String passwordRecordFile;
 	static ArrayList<PasswordRecord> passwordRecordArray;
 
 	/**
@@ -46,28 +47,37 @@ public class PasswordProtectorCLI {
 		try {
 			parseArgs(args);
 			mainMenu();
-		} catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException | IllegalBlockSizeException
-				| BadPaddingException | IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		} catch (InvalidSelectionException e) {
+			System.out.println("Usage:\njava -jar passwordprotector.jar <encrypted password file>");
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
+			System.out.println("Error: an exception occurred.\nPlease grab the following stack trace and open an issue at https://github.com/m-yuhas/password_protector");
 			e.printStackTrace();
 		}
-		
 	}
 	
-	@SuppressWarnings("resource")
+	/**
+	 * The parseArgs method takes the argument array passed by the command line and uses the results to set the static variables needed by this class.
+	 * 
+	 * @author	Michael Yuhas
+	 * @since	0.1
+	 * @version	0.1
+	 * @param	args	array of command line arguments
+	 * @throws Exception
+	 */
 	public static void parseArgs(String[] args) throws Exception {
 		if (args.length == 0) {
 			passwordRecordArray = new ArrayList<PasswordRecord>();
+			passwordRecordFile = null;
 		} else if (args.length != 1) {
-			System.out.println("Usage:\njava -jar passwordprotector.jar <encrypted password file>");
-			throw new Exception();
+			throw new InvalidSelectionException(new String(args.length + " args provided"));
 		} else {
-			Scanner reader = new Scanner(System.in); //TODO make password invisible
-			String key = reader.nextLine();
-			passwordRecordArray = PasswordProtector.parseSecurePasswordFile(args[0], key);
+			Console console = System.console();
+			if (console == null) {
+				throw new Exception("Unable to instatiate Console instance");
+			}
+			char passwordBytes[] = console.readPassword("Enter password to unlock file: ");
+			passwordRecordArray = PasswordProtector.parseSecurePasswordFile(args[0], new String(passwordBytes));
+			passwordRecordFile = args[0];
 		}
 	}
 	
