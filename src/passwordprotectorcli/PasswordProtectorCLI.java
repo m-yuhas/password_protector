@@ -81,39 +81,67 @@ public class PasswordProtectorCLI {
 		}
 	}
 	
+	/**
+	 * The mainMenu method displays the mainMenu and processes the user's input.
+	 * 
+	 * @author	Michael Yuhas
+	 * @since	0.1
+	 * @version	0.1
+	 * @throws	InvalidKeyException					An error occurred while encrypting of decrypting a record: key was invalid
+	 * @throws	NoSuchAlgorithmException			An error occurred while encrypting or decrypting a record: invalid encryption algorithm selected
+	 * @throws	NoSuchPaddingException				An error occurred while encrypting or decrypting a record: invalid padding used
+	 * @throws	IllegalBlockSizeException			An error occurred while encrypting or decrypting a record: invalid block size selected
+	 * @throws	BadPaddingException					An error occurred while encrypting or decrypting a record: invalid padding used
+	 * @throws	InvalidAlgorithmParameterException	An error occurred while encrypting or decrypting a record: invalid encryption algorithm selected
+	 */
 	@SuppressWarnings("resource")
 	public static void mainMenu() throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException {
 		String selection = "";
 		while (selection.toLowerCase() != "exit") {
+			printRecordList();
 			System.out.println("'VIEW <number>' to view record, 'NEW' to create a new Record, 'DELETE <number>' to delete a record, 'SAVE' to save the file, and 'EXIT' to exit.");
 			Scanner reader = new Scanner(System.in);
 			selection = reader.nextLine();
 			String choiceArray[] = selection.split(" ");
 			switch (choiceArray[0].toLowerCase()) {
 				case "view": 
-					viewRecord(passwordRecordArray, Integer.parseInt(choiceArray[1]));
-					break;
+					if (choiceArray.length < 2) {
+						System.out.println("Please select a record number using the syntax 'VIEW <number>'");
+						break;
+					} else if (Integer.parseInt(choiceArray[1]) < 1) {
+						System.out.println("Please select a valid record number");
+						break;
+					} else {
+						viewRecord(passwordRecordArray, Integer.parseInt(choiceArray[1]) - 1);
+						break;
+					}
 				case "new":
 					passwordRecordArray.add(createNewRecord());
 					break;
 				case "delete":
-					passwordRecordArray.remove(Integer.parseInt(choiceArray[1]));
-					break;
+					if (choiceArray.length < 2) {
+						System.out.println("Please select a record number using the syntax 'DELETE <number>'");
+						break;
+					} else if (Integer.parseInt(choiceArray[1]) < 1) {
+						System.out.println("Please select a valid record number");
+						break;
+					} else {
+						passwordRecordArray.remove(Integer.parseInt(choiceArray[1]));
+						break;
+					}
 				case "save":
 					saveFile(passwordRecordArray, choiceArray[1]);
 					break;
 				case "exit":
-					cleanUp(passwordRecordArray);
+					cleanUp();
 					return;
 				default:
 					System.out.println("Invalid Entry");
 					break;
 			}
 		}
-		cleanUp(passwordRecordArray);
-		return;
-		
-		
+		cleanUp();
+		return;	
 	}
 	
 	public static void viewRecord(ArrayList<PasswordRecord> recordArray, int n) {
@@ -204,13 +232,24 @@ public class PasswordProtectorCLI {
 		return;
 	}
 	
-	public static void cleanUp(ArrayList<PasswordRecord> passwordRecordList) {
-		passwordRecordList = null;
+	public static void cleanUp() {
+		passwordRecordArray = null;
 		return;
 	}
 	
 	public static void createNewFile() {
 		
+	}
+	
+	public static void printRecordList() {
+		if (passwordRecordArray.size() == 0) {
+			System.out.println("No records to display.");
+			return;
+		}
+		for (int i = 0; i < passwordRecordArray.size(); i++) {
+			System.out.println(String.valueOf(i+1) + ".) " + passwordRecordArray.get(i).getAccountType());
+		}
+		return;
 	}
 
 }
