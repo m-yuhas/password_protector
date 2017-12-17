@@ -49,6 +49,8 @@ public class PasswordProtectorCLI {
 			mainMenu();
 		} catch (InvalidSelectionException e) {
 			System.out.println("Usage:\njava -jar passwordprotector.jar <encrypted password file>");
+		} catch (CouldNotInstantiateConsoleException e) {
+			System.out.println("Unable to instatiate a console instance in this runtime environment.  Please start this program in Bash or Windows Command Shell.");
 		} catch (Exception e) {
 			System.out.println("Error: an exception occurred.\nPlease grab the following stack trace and open an issue at https://github.com/m-yuhas/password_protector");
 			e.printStackTrace();
@@ -62,7 +64,7 @@ public class PasswordProtectorCLI {
 	 * @since	0.1
 	 * @version	0.1
 	 * @param	args	array of command line arguments
-	 * @throws Exception
+	 * @throws	Exception
 	 */
 	public static void parseArgs(String[] args) throws Exception {
 		if (args.length == 0) {
@@ -93,16 +95,19 @@ public class PasswordProtectorCLI {
 	 * @throws	IllegalBlockSizeException			An error occurred while encrypting or decrypting a record: invalid block size selected
 	 * @throws	BadPaddingException					An error occurred while encrypting or decrypting a record: invalid padding used
 	 * @throws	InvalidAlgorithmParameterException	An error occurred while encrypting or decrypting a record: invalid encryption algorithm selected
+	 * @throws	NumberFormatException				An error occurred while encrypting or decrypting a record: invalid number format used
+	 * @throws 	CouldNotInstantiateConsoleException	An error occurred while trying to gather user input: could not instantiate a console in this runtime environment	
 	 */
-	@SuppressWarnings("resource")
-	public static void mainMenu() throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException {
+	public static void mainMenu() throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException, NumberFormatException, CouldNotInstantiateConsoleException {
 		String selection = "";
 		while (selection.toLowerCase() != "exit") {
 			printRecordList();
 			System.out.println("'VIEW <number>' to view record, 'NEW' to create a new Record, 'DELETE <number>' to delete a record, 'SAVE' to save the file, and 'EXIT' to exit.");
-			Scanner reader = new Scanner(System.in);
-			selection = reader.nextLine();
-			String choiceArray[] = selection.split(" ");
+			Console console = System.console();
+			if (console == null) {
+				throw new CouldNotInstantiateConsoleException("Could not instantiate console in this context.");
+			}
+			String choiceArray[] = console.readLine().split(" ");
 			switch (choiceArray[0].toLowerCase()) {
 				case "view": 
 					if (choiceArray.length < 2) {
@@ -144,27 +149,31 @@ public class PasswordProtectorCLI {
 		return;	
 	}
 	
-	public static void viewRecord(ArrayList<PasswordRecord> recordArray, int n) {
+	/**
+	 * The viewRecord function decrypts and prints the password associated with a particular account's record.
+	 * 
+	 * @author	Michael Yuhas
+	 * @since	0.1
+	 * @version	0.1
+	 * @param	recordArray								Array of password records to look through
+	 * @param 	n										Index of the record to view
+	 * @throws 	CouldNotInstantiateConsoleException 	An error occurred while trying to gather user input: could not instantiate a console in this runtime environment
+	 * @throws 	InvalidKeyException						An error occurred while encrypting of decrypting a record: key was invalid
+	 * @throws	NoSuchAlgorithmException				An error occurred while encrypting or decrypting a record: invalid encryption algorithm selected
+	 * @throws	NoSuchPaddingException					An error occurred while encrypting or decrypting a record: invalid padding used
+	 * @throws	IllegalBlockSizeException				An error occurred while encrypting or decrypting a record: invalid block size selected
+	 * @throws	BadPaddingException						An error occurred while encrypting or decrypting a record: invalid padding used
+	 * @throws	InvalidAlgorithmParameterException		An error occurred while encrypting or decrypting a record: invalid encryption algorithm selected
+	 */
+	public static void viewRecord(ArrayList<PasswordRecord> recordArray, int n) throws CouldNotInstantiateConsoleException, InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, InvalidAlgorithmParameterException, BadPaddingException {
 		Console console = System.console();
 		if (console == null) {
-			System.out.println("Couldn't get Console instance");
-			return;
+			throw new CouldNotInstantiateConsoleException("Could not instantiate console in this context.");
 		}
-		char passwordBytes[] = console.readPassword("Enter password: ");
-		try {
-			System.out.printf("Password: %s",recordArray.get(n).getPlainTextPassword(new String(passwordBytes)));
-		} catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException | IllegalBlockSizeException
-				| BadPaddingException e) {
-			// TODO Finish This
-			e.printStackTrace();
-		} catch (InvalidAlgorithmParameterException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		char passwordBytes[] = console.readPassword("Enter password to unlock record: ");
+		System.out.printf("Account Type: %s\nUser Name: %s\nPassword: %s",recordArray.get(n).getAccountType(),recordArray.get(n).getUserName(),recordArray.get(n).getPlainTextPassword(new String(passwordBytes)));
 		System.out.println("Press ENTER to continue...");
-		@SuppressWarnings("resource")
-		Scanner scanner = new Scanner(System.in);
-		scanner.nextLine();
+		console.readLine();
 		return;
 	}
 	
