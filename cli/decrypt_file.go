@@ -1,6 +1,6 @@
-// Main package for "encrypt_file"
+// Main package for "decrypt_file"
 //
-// This package is used to encrypt a file with a user provided password.
+// This package is used to decrypt a file that had been encrypted with encrypt_file
 package main
 
 import (
@@ -25,19 +25,18 @@ func main() {
     usage()
     return
   }
-  fmt.Print("Enter a password to encrypt the file:")
+  fmt.Print("Enter a password to decrypt the file:")
   password, err := terminal.ReadPassword(int(syscall.Stdin))
   if err != nil {
     fmt.Println("\nAn error occurred while reading the password.")
     return
   }
-  unencryptedData, err := ioutil.ReadFile(*inputFile)
+  unencryptedData, err := password_protector.OpenEncryptedFile(*inputFile, string(password))
   if err != nil {
     fmt.Println("\nAn error occurred while reading from the input file.")
     return
   }
-  err = password_protector.WriteEncryptedFile(*outputFile, string(unencryptedData), string(password))
-  if err != nil {
+  if ioutil.WriteFile(*outputFile, []byte(unencryptedData), 0666) != nil {
     fmt.Println("\nAn error occurred while writing to the output file.")
     return
   }
@@ -48,6 +47,6 @@ func main() {
 //
 // Print usage instructions for this program.
 func usage() {
-  fmt.Println("This utility encrypts a file with a user provided password.")
+  fmt.Println("This utility decrypts a file that was encrypted with the encrypt_file utility.")
   flag.Usage()
 }
