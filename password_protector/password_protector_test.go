@@ -227,3 +227,61 @@ func TestSerialization(t *testing.T) {
     }
 }
 
+func TestEncryptDecryptRecord(t *testing.T) {
+    inputData := []struct {
+        record map[string][]byte
+        key []byte
+    }{
+        {
+            map[string][]byte{
+                "foo": []byte{'b', 'a', 'r'},
+            },
+            []byte{'k', 'e', 'y'},
+        },
+        {
+            map[string][]byte{
+                "New\nLine": []byte{'\n', '\n', '\n'},
+                "CR\r": []byte{'\r', '\r', '\r'},
+                "EOF\x00": []byte{'\x00'},
+                "国际吗键": []byte{'z', 'h'},
+                "유니코드키": []byte{'k', 'o'},
+            },
+            []byte{'k', 'e', 'y'},
+        },
+        {
+            map[string][]byte{
+                "\x00": []byte{'\x00', '\x01'},
+            },
+            []byte{},
+        },
+        {
+            map[string][]byte{
+                "\x02\x03": []byte{'\x04'},
+            },
+            []byte{'\x00'},
+        },
+        {
+            map[string][]byte{
+                "\x05\x06": []byte{'\x05', '\x06'},
+            },
+            []byte{'\xff', '\x01', '\x00'},
+        },
+    }
+    for _, input := range inputData {
+        encData, err := EncryptRecord(input.record, input.key)
+        if err != nil {
+            t.Errorf("Error occurred encrypting input combination: %s", input)
+        }
+        decData, err := DecryptRecord(encData, input.key)
+        if err != nil {
+            t.Errorf("Error occurred decrypting input combination: %s", input)
+        }
+        if !reflect.DeepEqual(decData, input.record) {
+            t.Errorf(
+                "Decrypted record %s does not match original: %s",
+                decData,
+                input.record,
+            )
+        }
+    }
+}
