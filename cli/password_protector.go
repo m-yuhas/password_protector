@@ -1,123 +1,446 @@
-// Main package for password protector cli
-//
-// This package is used to generate and store passwords securely
 package main
 
 import (
-  "bufio"
-  "flag"
-  "fmt"
-  "golang.org/x/crypto/ssh/terminal"
-  "os"
-  "password_protector/password_protector"
-  "strings"
-  "syscall"
+    "bufio"
+    "fmt"
+    "golang.org/x/crypto/ssh/terminal"
+    "os"
+    "password_protector/password_protector"
+    "password_protector/password_generator"
+    "strings"
+    "syscall"
 )
 
-// main()
-//
-// Command line arguments:
-// <file to open or write to>
 func main() {
-  flag.Parse()
-  if len(flag.Args()) != 1 {
-    usage()
-    return
-  }
-  newFile := false
-  password := []byte{}
-  records := []password_protector.AccountRecord{}
-  if _, err := os.Stat(flag.Args()[0]); os.IsNotExist(err) {
-    newFile = true
-  } else {
-    fmt.Print("Enter the file password:")
+    if len(os.Args) > 2 ||
+    len(os.Args) < 2 ||
+    strings.ToLower(os.Args[1]) == "-h" ||
+    strings.ToLower(os.Args[1]) == "--help" {
+        fmt.Printf("Usage:\n")
+        fmt.Printf("password_protector [filename]\n")
+        fmt.Printf("Where [filename] is the name of the encrypted file to" + 
+            "open if it exists and the name of the file to create if no such" +
+            "file exists\n")
+        os.Exit(0)
+    } else {
+        fmt.Print("Enter file password:\n")
+        password, err := terminal.ReadPassword(int(syscall.Stdin))
+        if err != nil {
+            fmt.Printf("An error occurred while reading the password.\n")
+            os.Exit(0)
+        }
+        records := map[string][]byte{}
+        if _, err := os.Stat(os.Args[1]); err == nil {
+            fileContents, err := password_protector.OpenEncryptedFile(
+                os.Args[1],
+                password,
+            )
+            if err != nil {
+                fmt.Printf("An error occurred while decrypting the file.\n")
+                os.Exit(0)
+            }
+            records, err = password_protector.JSONToRecord(fileContents)
+            if err != nil {
+                fmt.Printf("An error occurred while parsing the file.\n")
+                os.Exit(0)
+            }
+        } else if os.IsNotExist(err) {
+            fileContents, err := password_protector.RecordToJSON(records)
+            if err != nil {
+                fmt.Printf("An error occurred while writing the file; file not saved.\n")
+                os.Exit(0)
+            }
+            err = password_protector.WriteEncryptedFile(
+                os.Args[1],
+                fileContents,
+                password,
+            )
+            if err != nil {
+                fmt.Printf("An error occurred while writing the file; file not saved.\n")
+                os.Exit(0)
+            }
+        }
+        mainMenu(records)
+    }
+    os.Exit(0)
+}
+
+func mainMenu(records map[string][]byte) {
+    for {
+        menu := map[string]func(map[string][]byte, string){
+            "list": list,
+            "view": view,
+            "add": add,
+            "delete": deleteRecord,
+            "modify": modify,
+            "save": save,
+            "change": change,
+            "quit": quit,
+        }
+        fmt.Printf("Options: \n1. LIST accounts\n2. VIEW account\n3. ADD " +
+            "account\n4. DELETE account\n5. MODIFY account\n6. SAVE file\n" +
+            "7. CHANGE file password\n8. QUIT\n")
+        reader := bufio.NewReader(os.Stdin)
+        selection, err := reader.ReadString('\n')
+        if err != nil {
+            fmt.Printf("An error occurred while parsing the input.\n")
+        }
+        selection = strings.TrimSuffix(
+            strings.TrimSuffix(selection, "\n"),
+            "\r",
+        )
+        slicedSelection := strings.SplitN(selection, " ", 2)
+        if len(slicedSelection) < 2 {
+            slicedSelection = append(slicedSelection, "")
+        }
+        if menuFunction, ok := menu[slicedSelection[0]]; ok {
+            menuFunction(records, slicedSelection[1])
+        } else {
+            fmt.Printf("Invalid selection, please try again.\n")
+        }
+    }
+}
+
+func list(records map[string][]byte, options string) {
+    count := 0
+    for name, _ := range records {
+        count += 1
+        fmt.Printf("%d. %s\n", count, name)
+    }
+    if count == 0 {
+        fmt.Printf("No records to list.\n")
+    }
+}
+
+func view(records map[string][]byte, option string) {
+    if _, ok := records[option]; ok {
+        fmt.Printf("Enter password to decrypt record:\n")
+        password, err := terminal.ReadPassword(int(syscall.Stdin))
+        if err != nil {
+            fmt.Printf("An error occurred while reading the password.\n")
+            return
+        }
+        record, err := password_protector.DecryptRecord(
+            records[option],
+            password,
+        )
+        if err != nil {
+            fmt.Printf("An error occurred while decrypting the record.\n")
+            return
+        }
+        fmt.Printf("KEY\t\tVALUE\n")
+        for key, val := range record {
+            fmt.Printf("%s\t\t%s\n", key, val)
+        }
+    } else {
+        fmt.Printf("Usage: VIEW <RECORD NAME>\n")
+    }
+}
+
+func add(records map[string][]byte, option string) {
+    if strings.TrimSpace(option) == "" {
+        fmt.Printf("Usage: ADD <RECORD NAME>\n")
+    } else if _, ok := records[option]; !ok {
+        record := map[string][]byte{}
+        editRecord(record)
+        fmt.Printf("Enter the password that will protect this record:\n")
+        password, err := terminal.ReadPassword(int(syscall.Stdin))
+        if err != nil {
+            fmt.Printf("An error occurred while reading the password.\n")
+            return
+        }
+        records[option], err = password_protector.EncryptRecord(
+            record,
+            password,
+        )
+        if err != nil {
+            fmt.Printf("An error occurred while adding the record.\n")
+            return
+        }
+    } else {
+        fmt.Printf("A record with the name \"%s\" already exists.\n", option)
+    }
+}
+
+func deleteRecord(records map[string][]byte, option string) {
+    if _, ok := records[option]; ok {
+        fmt.Printf("Enter password to delete record:\n")
+        password, err := terminal.ReadPassword(int(syscall.Stdin))
+        if err != nil {
+            fmt.Printf("An error occurred while reading the password.\n")
+            return
+        }
+        plaintextRecord, err := password_protector.DecryptData(
+            records[option],
+            password,
+        )
+        if err != nil {
+            fmt.Printf("An error occurred while decrypting the record.\n")
+            return
+        }
+        _, err = password_protector.JSONToRecord(plaintextRecord)
+        if err != nil {
+            fmt.Printf("An error occurred while parsing the record.\n")
+            return
+        }
+        fmt.Printf("Are you sure you want to delete this record (YES or NO)?\n")
+        reader := bufio.NewReader(os.Stdin)
+        selection, err := reader.ReadString('\n')
+        if err != nil {
+            fmt.Printf("An error occurred while parsing the input.\n")
+            fmt.Printf("Record was not deleted.\n")
+            return
+        }
+        selection = strings.ToLower(
+            strings.TrimSuffix(strings.TrimSuffix(selection, "\n"), "\r"),
+        )
+        if selection == "yes" {
+            delete(records, option)
+        } else {
+            fmt.Printf("Delete aborted.\n")
+        }
+    } else {
+        fmt.Printf("Usage: DELETE <RECORD NAME>\n")
+    }
+}
+
+func modify(records map[string][]byte, option string) {
+    if _, ok := records[option]; ok {
+        fmt.Printf("Enter password to decrypt record:\n")
+        password, err := terminal.ReadPassword(int(syscall.Stdin))
+        if err != nil {
+            fmt.Printf("An error occurred while reading the password.\n")
+            return
+        }
+        record, err := password_protector.DecryptRecord(
+            records[option],
+            password,
+        )
+        if err != nil {
+            fmt.Printf("An error occurred while decrypting the record.\n")
+            return
+        }
+        fmt.Printf("KEY\t\tVALUE\n")
+        for key, val := range record {
+            fmt.Printf("%s\t\t%s\n", key, val)
+        }
+        editRecord(record)
+        fmt.Printf("Enter the password that will protect this record:\n")
+        password, err = terminal.ReadPassword(int(syscall.Stdin))
+        if err != nil {
+            fmt.Printf("An error occurred while reading the password.\n")
+            return
+        }
+        records[option], err = password_protector.EncryptRecord(
+            record,
+            password,
+        )
+        if err != nil {
+            fmt.Printf("An error occurred while modifying the record.\n")
+            return
+        }
+    } else {
+        fmt.Printf("Usage: MODIFY <RECORD NAME>\n")
+    }
+}
+
+func save(records map[string][]byte, option string) {
+    fmt.Printf("Enter the file password:\n")
+    password, err := terminal.ReadPassword(int(syscall.Stdin))
+    if err != nil {
+        fmt.Printf("An error occurred while reading the password.\n")
+        return
+    }
+    fileContents, err := password_protector.OpenEncryptedFile(
+        os.Args[1],
+        password,
+    )
+    if err != nil {
+        fmt.Printf("An error occurred validating the password; file not saved.\n")
+        return
+    }
+    _, err = password_protector.JSONToRecord(fileContents)
+    if err != nil {
+        fmt.Printf("An error occurred validating the password; file not saved.\n")
+        return
+    }
+    fileContents, err = password_protector.RecordToJSON(records)
+    if err != nil {
+        fmt.Printf("An error occurred while writing the file; file not saved.\n")
+        return
+    }
+    err = password_protector.WriteEncryptedFile(
+        os.Args[1],
+        fileContents,
+        password,
+    )
+    if err != nil {
+        fmt.Printf("An error occurred while writing the file; file not saved.\n")
+        return
+    }
+}
+
+func change(records map[string][]byte, option string) {
+    fmt.Printf("Enter the current file password:\n")
+    password, err := terminal.ReadPassword(int(syscall.Stdin))
+    if err != nil {
+        fmt.Printf("An error occurred while reading the password.\n")
+        return
+    }
+    fileContents, err := password_protector.OpenEncryptedFile(
+        os.Args[1],
+        password,
+    )
+    if err != nil {
+        fmt.Printf("An error occurred while decrypting the file.\n")
+        return
+    }
+    records, err = password_protector.JSONToRecord(fileContents)
+    if err != nil {
+        fmt.Printf("An error occurred while parsing the file.\n")
+        return
+    }
+    fmt.Printf("Enter the new file password:\n")
     password, err = terminal.ReadPassword(int(syscall.Stdin))
     if err != nil {
-      fmt.Println("\nAn error occurred while reading the password.")
-      return
+        fmt.Printf("An error occurred while reading the password.\n")
+        fmt.Printf("File password not changed.\n")
+        return
     }
-    data, err := password_protector.OpenEncryptedFile(flag.Args()[0], string(password))
+    fileContents, err = password_protector.RecordToJSON(records)
     if err != nil {
-      fmt.Println("\nAn error occurred while opening the file.")
-      return
+        fmt.Printf("An error occurred while writing the file; changes not saved.\n")
+        return
     }
-    records, err = password_protector.JSONtoAccountRecordList(data)
+    err = password_protector.WriteEncryptedFile(
+        os.Args[1],
+        fileContents,
+        password,
+    )
     if err != nil {
-      fmt.Println("\nAn error occurred while parsing the account records.")
-      return
+        fmt.Printf("An error occurred while writing the file; changes not saved.\n")
+        return
     }
-  }
-  mainMenu(records, newFile, password)
 }
 
-func usage() {
-  fmt.Println("This utility stores passwords from multiple accounts")
-  flag.Usage()
-}
-
-func mainMenu(records []password_protector.AccountRecord, newFile bool, password []byte) {
-  promptToSave := false
-  modified := false
-  for {
-    fmt.Println("Options:\n1. LIST accounts\n2. ADD account\n3. DELETE account\n4. MODIFY account\n5. CHANGE file password\n6. SAVE\n7. QUIT")
+func quit(records map[string][]byte, option string) {
+    fmt.Printf("Save changes before exiting (YES or NO)?\n")
     reader := bufio.NewReader(os.Stdin)
     selection, err := reader.ReadString('\n')
     if err != nil {
-      fmt.Println("An error occurred while reading the input.")
-      continue
+        fmt.Println("An error occurred while parsing the input.")
     }
-    selectionArray := strings.Fields(selection)
-    if len(selectionArray) < 1 {
-      fmt.Println("Invalid selection")
-      continue
+    selection = strings.ToLower(
+        strings.TrimSuffix(strings.TrimSuffix(selection, "\n"), "\r"),
+    )
+    if selection == "yes" {
+        save(records, "")
     }
-    selection = strings.ToLower(selectionArray[0])
-    switch {
-    case selection == "list" || selection == "1":
-      list(records)
-    case selection == "add" || selection == "2":
-      records, modified = add(records)
-    case selection == "delete" || selection == "3":
-      records, modified = delete(records, selectionArray)
-    case selection == "modify" || selection == "4":
-      records, modified = modify(records, selectionArray)
-    case selection == "change" || selection == "5":
-      password, modified = change(password)
-    case selection == "save" || selection == "6":
-      modified = save(records, password)
-    case selection == "quit" || selection == "7":
-      quit(records, promptToSave)
-    default:
-      fmt.Println("Sorry, I didn't understand.")
+    fmt.Printf("Bye!\n")
+    os.Exit(0)
+}
+
+func generate() []byte {
+    var nChars uint
+    fmt.Printf("How many characters to use?\n")
+    _, err := fmt.Scanf("%d", &nChars)
+    if err != nil {
+        fmt.Printf("An error occurred while parsing the input.\n")
     }
-    promptToSave = promptToSave || modified
-  }
+    allowedChars := []byte{}
+    choices := map[string][]byte{
+        "Use lower case letters (YES or NO)?": password_generator.LowerCaseLetters,
+        "Use upper case letters (YES or NO)?": password_generator.UpperCaseLetters,
+        "Use numbers (YES or NO)?": password_generator.Numbers,
+        "Use symbols (YES or NO)?": password_generator.Symbols,
+    }
+    reader := bufio.NewReader(os.Stdin)
+    password := []byte{}
+    for {
+        for charType, charSlice := range choices {
+            fmt.Println(charType)
+            selection, err := reader.ReadString('\n')
+            if err != nil {
+                fmt.Printf("An error occurred while parsing the input.\n")
+            }
+            selection = strings.ToLower(
+                strings.TrimSuffix(strings.TrimSuffix(selection, "\n"), "\r"),
+            )
+            if selection == "yes" || selection == "y" {
+                allowedChars = append(allowedChars, charSlice...)
+            }
+        }
+        if len(allowedChars) == 0 {
+            fmt.Printf("Please select a non zero amount of allowable characters.\n")
+            continue
+        }
+        password, err = password_generator.GeneratePassword(
+            nChars,
+            allowedChars,
+        )
+        if err != nil {
+            fmt.Printf("An error occurred while generating the password.\n")
+            continue
+        }
+        fmt.Printf("The autogenerated password is:\n%s\nAccept (YES or NO)?\n", password)
+        selection, err := reader.ReadString('\n')
+        if err != nil {
+            fmt.Printf("An error occurred while parsing the input.\n")
+        }
+        selection = strings.ToLower(
+            strings.TrimSuffix(strings.TrimSuffix(selection, "\n"), "\r"),
+        )
+        if selection == "yes" || selection == "y" {
+            break
+        }
+    }
+    return password
 }
 
-func list(records []password_protector.AccountRecord) {
-  return
+func editRecord(record map[string][]byte) {
+    for {
+        fmt.Printf("Enter key name (D for Done):\n")
+        reader := bufio.NewReader(os.Stdin)
+        keyName, err := reader.ReadString('\n')
+        if err != nil {
+            fmt.Printf("An error occurred while reading the input.\n")
+            continue
+        }
+        keyName = strings.ToLower(
+            strings.TrimSuffix(strings.TrimSuffix(keyName, "\n"), "\r"),
+        )
+        if keyName == "d" {
+            break
+        }
+        fmt.Printf("Enter the value for key %s (A to AUTOGENERATE password):\n", keyName)
+        value, err := reader.ReadString('\n')
+        if err != nil {
+            fmt.Printf("An error occurred while reading the input.\n")
+            fmt.Printf("Please re-enter this key name.\n")
+            continue
+        }
+        value = strings.TrimSuffix(strings.TrimSuffix(value, "\n"), "\r")
+        if strings.ToLower(value) == "a" {
+            record[keyName] = generate()
+        } else {
+            record[keyName] = []byte(value)
+        }
+    }
 }
 
-func add(records []password_protector.AccountRecord) ([]password_protector.AccountRecord, bool) {
-  return []password_protector.AccountRecord{}, false
+func cleanMap(record map[string][]byte) {
+    for _, val := range record {
+        for i, _ := range val {
+            val[i] = '\x00'
+        }
+    }
 }
 
-func delete(records []password_protector.AccountRecord, selectionArray []string) ([]password_protector.AccountRecord, bool) {
-  return []password_protector.AccountRecord{}, false
+func cleanSlice(s []byte) {
+    for i, _ := range s {
+        s[i] = '\x00'
+    }
 }
 
-func modify(records []password_protector.AccountRecord, selectionArray []string) ([]password_protector.AccountRecord, bool) {
-  return []password_protector.AccountRecord{}, false
-}
-
-func change(password []byte) ([]byte, bool) {
-  return []byte{}, false
-}
-
-func save(records []password_protector.AccountRecord, password []byte) bool {
-  return false
-}
-
-func quit(records []password_protector.AccountRecord, modified bool) {
-  os.Exit(0)
-}
+// TODO: Internationalisation
+// TODO: Lint + DocStrings
