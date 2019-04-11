@@ -1,6 +1,7 @@
 package main
 
 import (
+    "github.com/therecipe/qt/gui"
 	"github.com/therecipe/qt/widgets"
 	"os"
 )
@@ -12,7 +13,7 @@ func main() {
 	window.SetMinimumSize2(640, 480)
     menu := widgets.NewQMenuBar(window)
     fileMenu := widgets.NewQMenu2("File", menu)
-    fileMenu.AddAction("New")
+    fileMenu.AddAction3("New", nil, "test", gui.NewQKeySequence5(gui.QKeySequence__New))
     fileMenu.AddAction("Open")
     fileMenu.AddAction("Save")
     fileMenu.AddAction("Change File Password")
