@@ -1,3 +1,4 @@
 **/.DS_Store
 gui/darwin
 gui/deploy
+gui/moc*
