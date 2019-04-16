@@ -20,7 +20,7 @@ type PasswordProtector struct {
     actionHelp *widgets.QAction
     actionAbout *widgets.QAction
     fileName string
-    records map[string][]byte{}
+    records map[string][]byte
 }
 
 
