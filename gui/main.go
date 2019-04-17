@@ -19,6 +19,9 @@ type PasswordProtector struct {
     actionGeneratePassword *widgets.QAction
     actionHelp *widgets.QAction
     actionAbout *widgets.QAction
+    layout *widgets.QFormLayout
+    accountsLabel *widgets.QLabel
+    actionsLabel *widgets.QLabel
     fileName string
     records map[string][]byte
 }
@@ -44,6 +47,7 @@ func initPasswordProtector() *PasswordProtector {
     this.setupFileActions()
     this.setupSecurityActions()
     this.setupHelpActions()
+    this.setupLayout()
     return this
 }
 
@@ -81,6 +85,18 @@ func (p *PasswordProtector) setupHelpActions() {
     p.actionHelp.ConnectTriggered(func(checked bool) {p.foo()})
     p.actionAbout = menu.AddAction("About")
     p.actionAbout.ConnectTriggered(func(checked bool) {p.about()})
+}
+
+func (p *PasswordProtector) setupLayout() {
+    widget := widgets.NewQWidget(nil, 0)
+    p.SetCentralWidget(widget)
+    p.layout = widgets.NewQFormLayout(widget)
+    p.accountsLabel = widgets.NewQLabel2("Accounts", nil, 0)
+    p.actionsLabel = widgets.NewQLabel2("Actions", nil, 0)
+    //p.layout.AddRow5(p.accountsLabel)
+    //p.layout.AddRow5(p.actionsLabel)
+    p.layout.AddWidget(p.accountsLabel)
+    p.layout.AddWidget(p.actionsLabel)
 }
 
 func (p *PasswordProtector) foo() {
