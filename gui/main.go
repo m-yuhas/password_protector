@@ -19,9 +19,11 @@ type PasswordProtector struct {
     actionGeneratePassword *widgets.QAction
     actionHelp *widgets.QAction
     actionAbout *widgets.QAction
-    layout *widgets.QFormLayout
-    accountsLabel *widgets.QLabel
-    actionsLabel *widgets.QLabel
+    layout *widgets.QGridLayout
+    addButton *widgets.QPushButton
+    scrollArea *widgets.QScrollArea
+    saved bool
+    modified bool
     fileName string
     records map[string][]byte
 }
@@ -57,7 +59,7 @@ func (p *PasswordProtector) setupFileActions() {
     p.actionNew.ConnectTriggered(func(checked bool) { p.foo()})
     p.actionNew.SetShortcuts2(gui.QKeySequence__New)
     p.actionOpen = menu.AddAction("Open")
-    p.actionOpen.ConnectTriggered(func(checked bool) { p.foo()})
+    p.actionOpen.ConnectTriggered(func(checked bool) { p.fileOpen()})
     p.actionOpen.SetShortcuts2(gui.QKeySequence__Open)
     p.actionSave = menu.AddAction("Save")
     p.actionSave.ConnectTriggered(func(checked bool) { p.foo()})
@@ -90,13 +92,11 @@ func (p *PasswordProtector) setupHelpActions() {
 func (p *PasswordProtector) setupLayout() {
     widget := widgets.NewQWidget(nil, 0)
     p.SetCentralWidget(widget)
-    p.layout = widgets.NewQFormLayout(widget)
-    p.accountsLabel = widgets.NewQLabel2("Accounts", nil, 0)
-    p.actionsLabel = widgets.NewQLabel2("Actions", nil, 0)
-    //p.layout.AddRow5(p.accountsLabel)
-    //p.layout.AddRow5(p.actionsLabel)
-    p.layout.AddWidget(p.accountsLabel)
-    p.layout.AddWidget(p.actionsLabel)
+    p.layout = widgets.NewQGridLayout(widget)
+    p.addButton = widgets.NewQPushButton2("Add New Account", nil)
+    p.scrollArea = widgets.NewQScrollArea(nil)
+    p.layout.AddWidget(p.addButton, 1, 1, core.Qt__AlignCenter)
+    p.layout.AddWidget(p.scrollArea, 1, 2, core.Qt__AlignCenter)
 }
 
 func (p *PasswordProtector) foo() {
@@ -110,4 +110,14 @@ func (p *PasswordProtector) about() {
         "This application encrypts passwords for management. " +
         "<a href='https://github.com/m-yuhas/password_protector'>click</a>",
     )
+}
+
+func (p *PasswordProtector) fileOpen() {
+    fileDialog := widgets.NewQFileDialog2(p, "Open File...", "", "")
+    //fileDialog.SetAcceptMode(widgets.QFileDialog__AcceptOpen)
+    //fileDialog.SetFileMode(widgets.QFileDialog__ExistingFile)
+    if fileDialog.Exec() != int(widgets.QDialog__Accepted) {
+        return
+    }
+    p.fileName = fileDialog.SelectedFiles()[0]
 }
