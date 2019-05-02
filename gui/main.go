@@ -19,7 +19,8 @@ type PasswordProtector struct {
     actionGeneratePassword *widgets.QAction
     actionHelp *widgets.QAction
     actionAbout *widgets.QAction
-    layout *widgets.QGridLayout
+    //layout *widgets.QGridLayout
+    layout *widgets.QVBoxLayout
     addButton *widgets.QPushButton
     scrollArea *widgets.QScrollArea
     saved bool
@@ -50,13 +51,14 @@ func initPasswordProtector() *PasswordProtector {
     this.setupSecurityActions()
     this.setupHelpActions()
     this.setupLayout()
+    this.setupBackend()
     return this
 }
 
 func (p *PasswordProtector) setupFileActions() {
     menu := p.MenuBar().AddMenu2("File")
     p.actionNew = menu.AddAction("New")
-    p.actionNew.ConnectTriggered(func(checked bool) { p.foo()})
+    p.actionNew.ConnectTriggered(func(checked bool) { p.fileOpen()})
     p.actionNew.SetShortcuts2(gui.QKeySequence__New)
     p.actionOpen = menu.AddAction("Open")
     p.actionOpen.ConnectTriggered(func(checked bool) { p.fileOpen()})
@@ -92,11 +94,18 @@ func (p *PasswordProtector) setupHelpActions() {
 func (p *PasswordProtector) setupLayout() {
     widget := widgets.NewQWidget(nil, 0)
     p.SetCentralWidget(widget)
-    p.layout = widgets.NewQGridLayout(widget)
+    p.layout = widgets.NewQVBoxLayout2(widget)
+    //p.layout = widgets.NewQGridLayout(widget)
     p.addButton = widgets.NewQPushButton2("Add New Account", nil)
     p.scrollArea = widgets.NewQScrollArea(nil)
-    p.layout.AddWidget(p.addButton, 1, 1, core.Qt__AlignCenter)
-    p.layout.AddWidget(p.scrollArea, 1, 2, core.Qt__AlignCenter)
+    //p.layout.AddWidget(p.addButton, 1, 1, core.Qt__AlignLeft)
+    //p.layout.AddWidget(p.scrollArea, 2, 1, core.Qt__AlignJustify)
+    p.layout.AddWidget(p.addButton, 1, core.Qt__AlignLeft)
+    p.layout.AddWidget(p.scrollArea, 10, core.Qt__AlignLeft)
+}
+
+func (p *PasswordProtector) setupBackend() {
+    p.records = map[string][]byte{}
 }
 
 func (p *PasswordProtector) foo() {
