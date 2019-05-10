@@ -29,6 +29,10 @@ type PasswordProtector struct {
     records map[string][]byte
 }
 
+type AccountEntryWindow struct {
+    gui.QWindow
+}
+
 
 func main() {
 	app := widgets.NewQApplication(len(os.Args), os.Args)
@@ -97,6 +101,7 @@ func (p *PasswordProtector) setupLayout() {
     p.layout = widgets.NewQVBoxLayout2(widget)
     //p.layout = widgets.NewQGridLayout(widget)
     p.addButton = widgets.NewQPushButton2("Add New Account", nil)
+    p.addButton.ConnectClicked(func(checked bool) {p.addAccount()})
     p.scrollArea = widgets.NewQScrollArea(nil)
     //p.layout.AddWidget(p.addButton, 1, 1, core.Qt__AlignLeft)
     //p.layout.AddWidget(p.scrollArea, 2, 1, core.Qt__AlignJustify)
@@ -129,4 +134,14 @@ func (p *PasswordProtector) fileOpen() {
         return
     }
     p.fileName = fileDialog.SelectedFiles()[0]
+}
+
+func (p *PasswordProtector) addAccount() {
+    entryWindow := initAccountEntryWindow()
+    entryWindow.Show()
+}
+
+func initAccountEntryWindow() *AccountEntryWindow {
+    var this = NewAccountEntryWindow(nil)
+    return this
 }
