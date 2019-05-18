@@ -30,7 +30,10 @@ type PasswordProtector struct {
 }
 
 type AccountEntryWindow struct {
-    gui.QWindow
+    widgets.QMainWindow
+    layout *widgets.QFormLayout
+    entryName *widgets.QLineEdit
+    entryTable *widgets.QTableWidget
 }
 
 
@@ -142,6 +145,13 @@ func (p *PasswordProtector) addAccount() {
 }
 
 func initAccountEntryWindow() *AccountEntryWindow {
-    var this = NewAccountEntryWindow(nil)
+    var this = NewAccountEntryWindow(nil, 0)
+    widget := widgets.NewQWidget(nil, 0)
+    this.SetCentralWidget(widget)
+    this.layout = widgets.NewQFormLayout(widget)
+    this.entryName = widgets.NewQLineEdit2("Account Name", nil)
+    this.entryTable = widgets.NewQTableWidget2(3, 2, nil)
+    this.layout.AddWidget(this.entryName)
+    this.layout.AddWidget(this.entryTable)
     return this
 }
