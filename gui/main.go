@@ -1,6 +1,7 @@
 package main
 
 import (
+    "fmt"
     "github.com/therecipe/qt/core"
     "github.com/therecipe/qt/gui"
 	"github.com/therecipe/qt/widgets"
@@ -34,8 +35,19 @@ type AccountEntryWindow struct {
     layout *widgets.QFormLayout
     entryName *widgets.QLineEdit
     entryTable *widgets.QTableWidget
+    addButton *widgets.QPushButton
+    record map[string][]byte
 }
 
+type PasswordEntryWindow struct {
+    widgets.QMainWindow
+    layout *widgets.QFormLayout
+    passwordLabel *widgets.QLabel
+    passwordEntry *widgets.QLineEdit
+    submitButton *widgets.QPushButton
+    caller *AccountEntryWindow
+    password []byte
+}
 
 func main() {
 	app := widgets.NewQApplication(len(os.Args), os.Args)
@@ -151,7 +163,43 @@ func initAccountEntryWindow() *AccountEntryWindow {
     this.layout = widgets.NewQFormLayout(widget)
     this.entryName = widgets.NewQLineEdit2("Account Name", nil)
     this.entryTable = widgets.NewQTableWidget2(3, 2, nil)
+    this.addButton = widgets.NewQPushButton2("Add", nil)
+    this.addButton.ConnectClicked(func(checked bool) {this.addAccount()})
     this.layout.AddWidget(this.entryName)
     this.layout.AddWidget(this.entryTable)
+    this.layout.AddWidget(this.addButton)
+    this.record = map[string][]byte{}
     return this
+}
+
+func (a *AccountEntryWindow) addAccount() {
+    initPasswordWindow(a)
+}
+
+func (a *AccountEntryWindow) onPasswordReturn(password []byte) {
+    fmt.Println("HERE")
+}
+
+func initPasswordWindow(caller *AccountEntryWindow) *PasswordEntryWindow {
+    var this = NewPasswordEntryWindow(nil, 0)
+    widget := widgets.NewQWidget(this, 0)
+    this.SetCentralWidget(widget)
+    this.layout = widgets.NewQFormLayout(widget)
+    this.passwordLabel = widgets.NewQLabel2("Password:", this, 0)
+    this.passwordEntry = widgets.NewQLineEdit2("", this)
+    this.passwordEntry.SetEchoMode(widgets.QLineEdit__Password)
+    this.submitButton = widgets.NewQPushButton2("Submit", this)
+    this.submitButton.ConnectClicked(func(checked bool) {this.submit()})
+    this.layout.AddWidget(this.passwordLabel)
+    this.layout.AddWidget(this.passwordEntry)
+    this.layout.AddWidget(this.submitButton)
+    this.caller = caller
+    this.Show()
+    return this
+}
+
+func (p *PasswordEntryWindow) submit() {
+    p.password = []byte(p.passwordEntry.Text())
+    p.caller.onPasswordReturn(p.password)
+    p.DestroyQMainWindow()
 }
