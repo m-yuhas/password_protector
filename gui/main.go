@@ -168,11 +168,41 @@ func initAccountEntryWindow() *AccountEntryWindow {
     this.layout.AddWidget(this.entryName)
     this.layout.AddWidget(this.entryTable)
     this.layout.AddWidget(this.addButton)
-    this.record = map[string][]byte{}
     return this
 }
 
 func (a *AccountEntryWindow) addAccount() {
+    a.record = map[string][]byte{}
+    for i := 0; i <= a.entryTable.RowCount(); i++ {
+        if a.entryTable.Item(i, 0).Text() == "" && a.entryTable.Item(i, 1).Text() != "" {
+            widgets.QMessageBox_About(
+                a,
+                "Incomplete Entry",
+                "Missing key; please make sure each value has an associated key.",
+            )
+            return
+        }
+        if a.entryTable.Item(i, 0).Text() == "" {
+            continue
+        } else if _, ok := a.record[a.entryTable.Item(i, 0).Text()]; !ok {
+            a.record[a.entryTable.Item(i, 0).Text()] = []byte(a.entryTable.Item(i, 1).Text())
+        } else {
+            widgets.QMessageBox_About(
+                a,
+                "Duplicate Entry",
+                "Duplicate key " + a.entryTable.Item(i, 0).Text() + "; please remove the duplicate entry.",
+            )
+            return
+        }
+    }
+    if len(a.record) == 0 {
+        widgets.QMessageBox_About(
+            a,
+            "No Data",
+            "No data entered.",
+        )
+        return
+    }
     initPasswordWindow(a)
 }
 
