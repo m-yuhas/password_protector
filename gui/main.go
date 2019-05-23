@@ -1,11 +1,11 @@
 package main
 
 import (
-    "fmt"
     "github.com/therecipe/qt/core"
     "github.com/therecipe/qt/gui"
 	"github.com/therecipe/qt/widgets"
 	"os"
+    "password_protector/password_protector"
 )
 
 type PasswordProtector struct {
@@ -24,6 +24,7 @@ type PasswordProtector struct {
     layout *widgets.QVBoxLayout
     addButton *widgets.QPushButton
     scrollArea *widgets.QScrollArea
+    entryWindow *AccountEntryWindow
     saved bool
     modified bool
     fileName string
@@ -36,6 +37,8 @@ type AccountEntryWindow struct {
     entryName *widgets.QLineEdit
     entryTable *widgets.QTableWidget
     addButton *widgets.QPushButton
+    caller *PasswordProtector
+    passwordWindow *PasswordEntryWindow
     record map[string][]byte
 }
 
@@ -46,7 +49,6 @@ type PasswordEntryWindow struct {
     passwordEntry *widgets.QLineEdit
     submitButton *widgets.QPushButton
     caller *AccountEntryWindow
-    password []byte
 }
 
 func main() {
@@ -152,11 +154,16 @@ func (p *PasswordProtector) fileOpen() {
 }
 
 func (p *PasswordProtector) addAccount() {
-    entryWindow := initAccountEntryWindow()
-    entryWindow.Show()
+    p.entryWindow = initAccountEntryWindow(p)
+    p.entryWindow.Show()
 }
 
-func initAccountEntryWindow() *AccountEntryWindow {
+func (p *PasswordProtector) onAddAccount(recordName string, encryptedRecord []byte) {
+    p.entryWindow.DestroyQMainWindow()
+    p.records[recordName] = encryptedRecord
+}
+
+func initAccountEntryWindow(caller *PasswordProtector) *AccountEntryWindow {
     var this = NewAccountEntryWindow(nil, 0)
     widget := widgets.NewQWidget(nil, 0)
     this.SetCentralWidget(widget)
@@ -168,6 +175,7 @@ func initAccountEntryWindow() *AccountEntryWindow {
     this.layout.AddWidget(this.entryName)
     this.layout.AddWidget(this.entryTable)
     this.layout.AddWidget(this.addButton)
+    this.caller = caller
     return this
 }
 
@@ -203,11 +211,24 @@ func (a *AccountEntryWindow) addAccount() {
         )
         return
     }
-    initPasswordWindow(a)
+    a.passwordWindow = initPasswordWindow(a)
 }
 
 func (a *AccountEntryWindow) onPasswordReturn(password []byte) {
-    fmt.Println("HERE")
+    a.passwordWindow.DestroyQMainWindow()
+    encryptedRecord, err := password_protector.EncryptRecord(
+        a.record,
+        password,
+    )
+    if err != nil {
+        widgets.QMessageBox_About(
+            a,
+            "Encryption Error",
+            "An error occurred while encrypting the record",
+        )
+        return
+    }
+    a.caller.onAddAccount(a.entryName.Text(), encryptedRecord)
 }
 
 func initPasswordWindow(caller *AccountEntryWindow) *PasswordEntryWindow {
@@ -229,7 +250,5 @@ func initPasswordWindow(caller *AccountEntryWindow) *PasswordEntryWindow {
 }
 
 func (p *PasswordEntryWindow) submit() {
-    p.password = []byte(p.passwordEntry.Text())
-    p.caller.onPasswordReturn(p.password)
-    p.DestroyQMainWindow()
+    p.caller.onPasswordReturn([]byte(p.passwordEntry.Text()))
 }
