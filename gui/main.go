@@ -20,10 +20,14 @@ type PasswordProtector struct {
     actionGeneratePassword *widgets.QAction
     actionHelp *widgets.QAction
     actionAbout *widgets.QAction
-    //layout *widgets.QGridLayout
-    layout *widgets.QVBoxLayout
+    layout *widgets.QGridLayout
+    //layout *widgets.QVBoxLayout
+    viewButton *widgets.QPushButton
     addButton *widgets.QPushButton
-    scrollArea *widgets.QScrollArea
+    editButton *widgets.QPushButton
+    deleteButton *widgets.QPushButton
+    changeButton *widgets.QPushButton
+    listWidget *widgets.QListWidget
     entryWindow *AccountEntryWindow
     saved bool
     modified bool
@@ -115,15 +119,28 @@ func (p *PasswordProtector) setupHelpActions() {
 func (p *PasswordProtector) setupLayout() {
     widget := widgets.NewQWidget(nil, 0)
     p.SetCentralWidget(widget)
-    p.layout = widgets.NewQVBoxLayout2(widget)
-    //p.layout = widgets.NewQGridLayout(widget)
-    p.addButton = widgets.NewQPushButton2("Add New Account", nil)
+    //p.layout = widgets.NewQVBoxLayout2(widget)
+    p.layout = widgets.NewQGridLayout(widget)
+    p.addButton = widgets.NewQPushButton2("Add New Record", nil)
     p.addButton.ConnectClicked(func(checked bool) {p.addAccount()})
-    p.scrollArea = widgets.NewQScrollArea(nil)
-    //p.layout.AddWidget(p.addButton, 1, 1, core.Qt__AlignLeft)
-    //p.layout.AddWidget(p.scrollArea, 2, 1, core.Qt__AlignJustify)
-    p.layout.AddWidget(p.addButton, 1, core.Qt__AlignLeft)
-    p.layout.AddWidget(p.scrollArea, 10, core.Qt__AlignLeft)
+    p.addButton.SetMinimumWidth(100)
+    p.viewButton = widgets.NewQPushButton2("View Existing Record", nil)
+    p.viewButton.SetMinimumWidth(100)
+    p.editButton = widgets.NewQPushButton2("Edit Existing Record", nil)
+    p.editButton.SetMinimumWidth(100)
+    p.deleteButton = widgets.NewQPushButton2("Delete Record", nil)
+    p.deleteButton.SetMinimumWidth(100)
+    p.changeButton = widgets.NewQPushButton2("Change Record Password", nil)
+    p.changeButton.SetMinimumWidth(100)
+    p.listWidget = widgets.NewQListWidget(nil)
+    p.layout.AddWidget3(p.listWidget, 1, 1, 5, 1, core.Qt__AlignJustify)
+    p.layout.AddWidget(p.addButton, 1, 2, core.Qt__AlignCenter)
+    p.layout.AddWidget(p.viewButton, 2, 2, core.Qt__AlignCenter)
+    p.layout.AddWidget(p.editButton, 3, 2, core.Qt__AlignCenter)
+    p.layout.AddWidget(p.deleteButton, 4, 2, core.Qt__AlignCenter)
+    p.layout.AddWidget(p.changeButton, 5, 2, core.Qt__AlignCenter)
+    //p.layout.AddWidget(p.addButton, 1, core.Qt__AlignLeft)
+    //p.layout.AddWidget(p.scrollArea, 10, core.Qt__AlignLeft)
 }
 
 func (p *PasswordProtector) setupBackend() {
