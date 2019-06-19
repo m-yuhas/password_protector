@@ -8,8 +8,41 @@ import (
     "password_protector/password_protector"
 )
 
-type PasswordProtector struct {
+type Window interface {
+    onPasswordReturn(password []byte)
+}
+
+type PasswordProtectorMainWindow interface {
+    Window
+    about()
+    accountAdded()
+    addAccount()
+    openFile()
+    refresh()
+    saveFile()
+    viewAccount()
+}
+
+type AccountEntryWindow interface {
+    Window
+    submit()
+} 
+
+type AccountViewWindow interface {
+    Window 
+}
+
+type PasswordEntryWindow interface {
+    Window
+    submit()
+}
+
+type window struct {
     widgets.QMainWindow
+}
+
+type passwordProtectorMainWindow struct {
+    window
     actionNew *widgets.QAction
     actionOpen *widgets.QAction
     actionSave *widgets.QAction
@@ -21,45 +54,57 @@ type PasswordProtector struct {
     actionHelp *widgets.QAction
     actionAbout *widgets.QAction
     layout *widgets.QGridLayout
-    //layout *widgets.QVBoxLayout
     viewButton *widgets.QPushButton
     addButton *widgets.QPushButton
     editButton *widgets.QPushButton
     deleteButton *widgets.QPushButton
     changeButton *widgets.QPushButton
     listWidget *widgets.QListWidget
-    entryWindow *AccountEntryWindow
+    entryWindow *accountEntryWindow
+    viewWindow *accountViewWindow
     saved bool
     modified bool
     fileName string
     records map[string][]byte
 }
 
-type AccountEntryWindow struct {
-    widgets.QMainWindow
+type accountEntryWindow struct {
+    window 
     layout *widgets.QFormLayout
     entryName *widgets.QLineEdit
     entryTable *widgets.QTableWidget
     addButton *widgets.QPushButton
-    caller *PasswordProtector
-    passwordWindow *PasswordEntryWindow
+    caller *passwordProtectorMainWindow
+    passwordWindow *passwordEntryWindow
     record map[string][]byte
 }
 
-type PasswordEntryWindow struct {
-    widgets.QMainWindow
+type accountViewWindow struct {
+    window 
+    layout *widgets.QFormLayout
+    recordLabel *widgets.QLabel
+    recordName *widgets.QLabel
+    recordTable *widgets.QTableWidget
+    doneButton *widgets.QPushButton
+    caller *passwordProtectorMainWindow
+    passwordWindow *passwordEntryWindow
+    record map[string][]byte
+}
+
+type passwordEntryWindow struct {
+    window
     layout *widgets.QFormLayout
     passwordLabel *widgets.QLabel
     passwordEntry *widgets.QLineEdit
     submitButton *widgets.QPushButton
-    caller *AccountEntryWindow
+    caller func([]byte)
 }
 
 func main() {
 	app := widgets.NewQApplication(len(os.Args), os.Args)
     core.QCoreApplication_SetApplicationName("Password Protector")
     core.QCoreApplication_SetApplicationVersion("0.0.1")
-    mainWindow := initPasswordProtector()
+    mainWindow := initPasswordProtectorMainWindow()
     /* TODO: Work on parsing args for drag and drop
     if !mainWindow.open(args[0]) {
         mainWindow.newFile()
@@ -68,90 +113,74 @@ func main() {
     app.Exec()
 }
 
-func initPasswordProtector() *PasswordProtector {
-    var this = NewPasswordProtector(nil, 0)
+func initPasswordProtectorMainWindow() *passwordProtectorMainWindow {
+    var this = NewPasswordProtectorMainWindow(nil, 0)
     this.SetWindowTitle(core.QCoreApplication_ApplicationName())
     this.SetMinimumSize2(640, 480)
-    this.setupFileActions()
-    this.setupSecurityActions()
-    this.setupHelpActions()
-    this.setupLayout()
-    this.setupBackend()
+
+    //this.setupFileActions()
+    fileMenu := this.MenuBar().AddMenu2("File")
+    this.actionNew = fileMenu.AddAction("New")
+    this.actionNew.ConnectTriggered(func(checked bool) { this.openFile()})
+    this.actionNew.SetShortcuts2(gui.QKeySequence__New)
+    this.actionOpen = fileMenu.AddAction("Open")
+    this.actionOpen.ConnectTriggered(func(checked bool) { this.openFile()})
+    this.actionOpen.SetShortcuts2(gui.QKeySequence__Open)
+    this.actionSave = fileMenu.AddAction("Save")
+    //this.actionSave.ConnectTriggered(func(checked bool) { this.foo()})
+    this.actionSave.SetShortcuts2(gui.QKeySequence__Save)
+    this.actionChangePassword = fileMenu.AddAction("Change File Password")
+    //this.actionChangePassword.ConnectTriggered(func(checked bool) { this.foo()})
+    this.actionQuit = fileMenu.AddAction("Quit")
+    //this.actionQuit.ConnectTriggered(func(checked bool) { this.foo() })
+    this.actionQuit.SetShortcuts2(gui.QKeySequence__Quit)
+
+    //this.setupSecurityActions()
+    securityMenu := this.MenuBar().AddMenu2("Security")
+    this.actionEncryptFile = securityMenu.AddAction("Encrypt File")
+    //this.actionEncryptFile.ConnectTriggered(func(checked bool) {this.foo()})
+    this.actionDecryptFile = securityMenu.AddAction("Decrypt File")
+    //this.actionDecryptFile.ConnectTriggered(func(checked bool) {this.foo()})
+    this.actionGeneratePassword = securityMenu.AddAction("Generate Password")
+    //this.actionGeneratePassword.ConnectTriggered(func(checked bool) {this.foo()})
+
+    //this.setupHelpActions()
+    helpMenu := this.MenuBar().AddMenu2("Help")
+    this.actionHelp = helpMenu.AddAction("Password Protector Help")
+    //this.actionHelp.ConnectTriggered(func(checked bool) {this.foo()})
+    this.actionAbout = helpMenu.AddAction("About")
+    this.actionAbout.ConnectTriggered(func(checked bool) {this.about()})
+
+    //this.setupLayout()
+    widget := widgets.NewQWidget(this, 0)
+    this.SetCentralWidget(widget)
+    this.layout = widgets.NewQGridLayout(widget)
+    this.addButton = widgets.NewQPushButton2("Add New Record", nil)
+    this.addButton.ConnectClicked(func(checked bool) {this.addAccount()})
+    this.addButton.SetMinimumWidth(200)
+    this.viewButton = widgets.NewQPushButton2("View Existing Record", nil)
+    this.viewButton.ConnectClicked(func(checked bool) {this.viewAccount()})
+    this.viewButton.SetMinimumWidth(200)
+    this.editButton = widgets.NewQPushButton2("Edit Existing Record", nil)
+    this.editButton.SetMinimumWidth(200)
+    this.deleteButton = widgets.NewQPushButton2("Delete Record", nil)
+    this.deleteButton.SetMinimumWidth(200)
+    this.changeButton = widgets.NewQPushButton2("Change Record Password", nil)
+    this.changeButton.SetMinimumWidth(200)
+    this.listWidget = widgets.NewQListWidget(nil)
+    this.layout.AddWidget3(this.listWidget, 1, 1, 5, 1, core.Qt__AlignJustify)
+    this.layout.AddWidget(this.addButton, 1, 2, core.Qt__AlignCenter)
+    this.layout.AddWidget(this.viewButton, 2, 2, core.Qt__AlignCenter)
+    this.layout.AddWidget(this.editButton, 3, 2, core.Qt__AlignCenter)
+    this.layout.AddWidget(this.deleteButton, 4, 2, core.Qt__AlignCenter)
+    this.layout.AddWidget(this.changeButton, 5, 2, core.Qt__AlignCenter)
+
+    this.records = map[string][]byte{}
+
     return this
 }
 
-func (p *PasswordProtector) setupFileActions() {
-    menu := p.MenuBar().AddMenu2("File")
-    p.actionNew = menu.AddAction("New")
-    p.actionNew.ConnectTriggered(func(checked bool) { p.fileOpen()})
-    p.actionNew.SetShortcuts2(gui.QKeySequence__New)
-    p.actionOpen = menu.AddAction("Open")
-    p.actionOpen.ConnectTriggered(func(checked bool) { p.fileOpen()})
-    p.actionOpen.SetShortcuts2(gui.QKeySequence__Open)
-    p.actionSave = menu.AddAction("Save")
-    p.actionSave.ConnectTriggered(func(checked bool) { p.foo()})
-    p.actionSave.SetShortcuts2(gui.QKeySequence__Save)
-    p.actionChangePassword = menu.AddAction("Change File Password")
-    p.actionChangePassword.ConnectTriggered(func(checked bool) { p.foo()})
-    p.actionQuit = menu.AddAction("Quit")
-    p.actionQuit.ConnectTriggered(func(checked bool) { p.foo() })
-    p.actionQuit.SetShortcuts2(gui.QKeySequence__Quit)
-}
-
-func (p *PasswordProtector) setupSecurityActions() {
-    menu := p.MenuBar().AddMenu2("Security")
-    p.actionEncryptFile = menu.AddAction("Encrypt File")
-    p.actionEncryptFile.ConnectTriggered(func(checked bool) {p.foo()})
-    p.actionDecryptFile = menu.AddAction("Decrypt File")
-    p.actionDecryptFile.ConnectTriggered(func(checked bool) {p.foo()})
-    p.actionGeneratePassword = menu.AddAction("Generate Password")
-    p.actionGeneratePassword.ConnectTriggered(func(checked bool) {p.foo()})
-}
-
-func (p *PasswordProtector) setupHelpActions() {
-    menu := p.MenuBar().AddMenu2("Help")
-    p.actionHelp = menu.AddAction("Password Protector Help")
-    p.actionHelp.ConnectTriggered(func(checked bool) {p.foo()})
-    p.actionAbout = menu.AddAction("About")
-    p.actionAbout.ConnectTriggered(func(checked bool) {p.about()})
-}
-
-func (p *PasswordProtector) setupLayout() {
-    widget := widgets.NewQWidget(nil, 0)
-    p.SetCentralWidget(widget)
-    //p.layout = widgets.NewQVBoxLayout2(widget)
-    p.layout = widgets.NewQGridLayout(widget)
-    p.addButton = widgets.NewQPushButton2("Add New Record", nil)
-    p.addButton.ConnectClicked(func(checked bool) {p.addAccount()})
-    p.addButton.SetMinimumWidth(100)
-    p.viewButton = widgets.NewQPushButton2("View Existing Record", nil)
-    p.viewButton.SetMinimumWidth(100)
-    p.editButton = widgets.NewQPushButton2("Edit Existing Record", nil)
-    p.editButton.SetMinimumWidth(100)
-    p.deleteButton = widgets.NewQPushButton2("Delete Record", nil)
-    p.deleteButton.SetMinimumWidth(100)
-    p.changeButton = widgets.NewQPushButton2("Change Record Password", nil)
-    p.changeButton.SetMinimumWidth(100)
-    p.listWidget = widgets.NewQListWidget(nil)
-    p.layout.AddWidget3(p.listWidget, 1, 1, 5, 1, core.Qt__AlignJustify)
-    p.layout.AddWidget(p.addButton, 1, 2, core.Qt__AlignCenter)
-    p.layout.AddWidget(p.viewButton, 2, 2, core.Qt__AlignCenter)
-    p.layout.AddWidget(p.editButton, 3, 2, core.Qt__AlignCenter)
-    p.layout.AddWidget(p.deleteButton, 4, 2, core.Qt__AlignCenter)
-    p.layout.AddWidget(p.changeButton, 5, 2, core.Qt__AlignCenter)
-    //p.layout.AddWidget(p.addButton, 1, core.Qt__AlignLeft)
-    //p.layout.AddWidget(p.scrollArea, 10, core.Qt__AlignLeft)
-}
-
-func (p *PasswordProtector) setupBackend() {
-    p.records = map[string][]byte{}
-}
-
-func (p *PasswordProtector) foo() {
-    widgets.QMessageBox_About(p, "About", "This is a test")
-}
-
-func (p *PasswordProtector) about() {
+func (p *passwordProtectorMainWindow) about() {
     widgets.QMessageBox_About(
         p,
         "About Password Protector",
@@ -160,7 +189,7 @@ func (p *PasswordProtector) about() {
     )
 }
 
-func (p *PasswordProtector) fileOpen() {
+func (p *passwordProtectorMainWindow) openFile() {
     fileDialog := widgets.NewQFileDialog2(p, "Open File...", "", "")
     //fileDialog.SetAcceptMode(widgets.QFileDialog__AcceptOpen)
     //fileDialog.SetFileMode(widgets.QFileDialog__ExistingFile)
@@ -170,17 +199,34 @@ func (p *PasswordProtector) fileOpen() {
     p.fileName = fileDialog.SelectedFiles()[0]
 }
 
-func (p *PasswordProtector) addAccount() {
+func (p *passwordProtectorMainWindow) saveFile() {
+    return
+}
+
+func (p *passwordProtectorMainWindow) addAccount() {
     p.entryWindow = initAccountEntryWindow(p)
     p.entryWindow.Show()
 }
 
-func (p *PasswordProtector) onAddAccount(recordName string, encryptedRecord []byte) {
-    p.entryWindow.DestroyQMainWindow()
-    p.records[recordName] = encryptedRecord
+func (p *passwordProtectorMainWindow) viewAccount() {
+    p.viewWindow = initAccountViewWindow(p, p.listWidget.CurrentItem().Text())
+    p.viewWindow.Show()
 }
 
-func initAccountEntryWindow(caller *PasswordProtector) *AccountEntryWindow {
+func (p *passwordProtectorMainWindow) accountAdded(recordName string, encryptedRecord []byte) {
+    p.entryWindow.DestroyQMainWindow()
+    p.records[recordName] = encryptedRecord
+    p.refresh()
+}
+
+func (p *passwordProtectorMainWindow) refresh() {
+    p.listWidget.Clear()
+    for account, _ := range p.records {
+        p.listWidget.AddItem(account)
+    }
+}
+
+func initAccountEntryWindow(caller *passwordProtectorMainWindow) *accountEntryWindow {
     var this = NewAccountEntryWindow(nil, 0)
     widget := widgets.NewQWidget(nil, 0)
     this.SetCentralWidget(widget)
@@ -188,7 +234,7 @@ func initAccountEntryWindow(caller *PasswordProtector) *AccountEntryWindow {
     this.entryName = widgets.NewQLineEdit2("Account Name", nil)
     this.entryTable = widgets.NewQTableWidget2(3, 2, nil)
     this.addButton = widgets.NewQPushButton2("Add", nil)
-    this.addButton.ConnectClicked(func(checked bool) {this.addAccount()})
+    this.addButton.ConnectClicked(func(checked bool) {this.submit()})
     this.layout.AddWidget(this.entryName)
     this.layout.AddWidget(this.entryTable)
     this.layout.AddWidget(this.addButton)
@@ -196,7 +242,7 @@ func initAccountEntryWindow(caller *PasswordProtector) *AccountEntryWindow {
     return this
 }
 
-func (a *AccountEntryWindow) addAccount() {
+func (a *accountEntryWindow) submit() {
     a.record = map[string][]byte{}
     for i := 0; i <= a.entryTable.RowCount(); i++ {
         if a.entryTable.Item(i, 0).Text() == "" && a.entryTable.Item(i, 1).Text() != "" {
@@ -228,10 +274,10 @@ func (a *AccountEntryWindow) addAccount() {
         )
         return
     }
-    a.passwordWindow = initPasswordWindow(a)
+    a.passwordWindow = initPasswordEntryWindow(a.onPasswordReturn)
 }
 
-func (a *AccountEntryWindow) onPasswordReturn(password []byte) {
+func (a *accountEntryWindow) onPasswordReturn(password []byte) {
     a.passwordWindow.DestroyQMainWindow()
     encryptedRecord, err := password_protector.EncryptRecord(
         a.record,
@@ -245,10 +291,28 @@ func (a *AccountEntryWindow) onPasswordReturn(password []byte) {
         )
         return
     }
-    a.caller.onAddAccount(a.entryName.Text(), encryptedRecord)
+    a.caller.accountAdded(a.entryName.Text(), encryptedRecord)
 }
 
-func initPasswordWindow(caller *AccountEntryWindow) *PasswordEntryWindow {
+func initAccountViewWindow(caller *passwordProtectorMainWindow, recordName string) *accountViewWindow {
+    var this = NewAccountViewWindow(nil, 0)
+    initPasswordEntryWindow(this.onPasswordReturn)
+    widget := widgets.NewQWidget(this, 0)
+    this.SetCentralWidget(widget)
+    this.layout = widgets.NewQFormLayout(widget)
+    this.recordLabel = widgets.NewQLabel2("Account Name:", this, 0)
+    this.recordName = widgets.NewQLabel2("<b>"+recordName+"</b>", this, 0)
+    //this.recordTable = widgets.NewQTableWidget2(len(record), 2, nil)
+    //this.recordTable.SetFlags(this.recordTable.Flags() ^ core.Qt__ItemIsEditable)
+    this.doneButton = widgets.NewQPushButton2("Done", this)
+    return this
+}
+
+func (a *accountViewWindow) onPasswordReturn(password []byte) {
+    return
+}
+
+func initPasswordEntryWindow(caller func([]byte)) *passwordEntryWindow {
     var this = NewPasswordEntryWindow(nil, 0)
     widget := widgets.NewQWidget(this, 0)
     this.SetCentralWidget(widget)
@@ -266,6 +330,7 @@ func initPasswordWindow(caller *AccountEntryWindow) *PasswordEntryWindow {
     return this
 }
 
-func (p *PasswordEntryWindow) submit() {
-    p.caller.onPasswordReturn([]byte(p.passwordEntry.Text()))
+func (p *passwordEntryWindow) submit() {
+    //p.caller.onPasswordReturn([]byte(p.passwordEntry.Text()))
+    p.caller([]byte(p.passwordEntry.Text()))
 }
