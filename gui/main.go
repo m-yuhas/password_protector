@@ -88,7 +88,20 @@ type accountViewWindow struct {
     doneButton *widgets.QPushButton
     caller *passwordProtectorMainWindow
     passwordWindow *passwordEntryWindow
-    record map[string][]byte
+    name string
+    record []byte
+}
+
+type accountEditWindow struct {
+    window
+    layout *widgets.QFormLayout
+    recordLabel *widgets.QLabel
+    recordName *widgets.QTableWidget
+    submitButton *widgets.QPushButton
+    caller *passwordProtectorMainWindow
+    passwordWindow *passwordEntryWindow
+    name string
+    record []byte
 }
 
 type passwordEntryWindow struct {
@@ -209,8 +222,7 @@ func (p *passwordProtectorMainWindow) addAccount() {
 }
 
 func (p *passwordProtectorMainWindow) viewAccount() {
-    p.viewWindow = initAccountViewWindow(p, p.listWidget.CurrentItem().Text())
-    p.viewWindow.Show()
+    p.viewWindow = initAccountViewWindow(p, p.listWidget.CurrentItem().Text(), p.records)
 }
 
 func (p *passwordProtectorMainWindow) accountAdded(recordName string, encryptedRecord []byte) {
@@ -294,22 +306,159 @@ func (a *accountEntryWindow) onPasswordReturn(password []byte) {
     a.caller.accountAdded(a.entryName.Text(), encryptedRecord)
 }
 
-func initAccountViewWindow(caller *passwordProtectorMainWindow, recordName string) *accountViewWindow {
+func initAccountViewWindow(caller *passwordProtectorMainWindow, recordName string, records map[string][]byte) *accountViewWindow {
     var this = NewAccountViewWindow(nil, 0)
-    initPasswordEntryWindow(this.onPasswordReturn)
-    widget := widgets.NewQWidget(this, 0)
-    this.SetCentralWidget(widget)
-    this.layout = widgets.NewQFormLayout(widget)
-    this.recordLabel = widgets.NewQLabel2("Account Name:", this, 0)
-    this.recordName = widgets.NewQLabel2("<b>"+recordName+"</b>", this, 0)
+    //initPasswordEntryWindow(this.onPasswordReturn)
+
     //this.recordTable = widgets.NewQTableWidget2(len(record), 2, nil)
     //this.recordTable.SetFlags(this.recordTable.Flags() ^ core.Qt__ItemIsEditable)
-    this.doneButton = widgets.NewQPushButton2("Done", this)
+
+    this.passwordWindow = initPasswordEntryWindow(this.onPasswordReturn)
+    this.name = recordName
+    this.record = records[recordName]
     return this
 }
 
 func (a *accountViewWindow) onPasswordReturn(password []byte) {
+    a.passwordWindow.DestroyQMainWindow()
+    decryptedRecord, err := password_protector.DecryptRecord(
+        a.record,
+        password,
+    )
+    if err == nil {
+        widget := widgets.NewQWidget(a, 0)
+        a.SetCentralWidget(widget)
+        a.layout = widgets.NewQFormLayout(widget)
+        a.recordLabel = widgets.NewQLabel2("Account Name:", a, 0)
+        a.recordName = widgets.NewQLabel2("<b>"+a.name+"</b>", a, 0)
+        a.recordTable = widgets.NewQTableWidget2(len(decryptedRecord), 2, nil)
+        i := 0
+        for key, value := range decryptedRecord {
+            a.recordTable.SetItem(i, 0, widgets.NewQTableWidgetItem2(key, 0))
+            a.recordTable.SetItem(i, 1, widgets.NewQTableWidgetItem2(string(value), 0))
+            a.recordTable.Item(i, 0).SetFlags(a.recordTable.Item(i, 0).Flags() ^ core.Qt__ItemIsEditable)
+            a.recordTable.Item(i, 1).SetFlags(a.recordTable.Item(i, 1).Flags() ^ core.Qt__ItemIsEditable)
+            i++
+        }
+        a.doneButton = widgets.NewQPushButton2("Done", a)
+        a.doneButton.ConnectClicked(func(checked bool) {a.done()})
+        a.layout.AddWidget(a.recordLabel)
+        a.layout.AddWidget(a.recordName)
+        a.layout.AddWidget(a.recordTable)
+        a.layout.AddWidget(a.doneButton)
+        a.Show()
+        return
+    } else {
+        widgets.QMessageBox_About(
+            a,
+            "Decryption Error",
+            "An error occurred while decrypting the record",
+        )
+    }
     return
+}
+
+func (a *accountViewWindow) done() {
+    a.DestroyQMainWindow()
+}
+
+func initAccountEditWindow(caller *passwordProtectorMainWindow, recordName string, record map[string][]byte) *accountEditWindow {
+    var this = NewAccountEditWindow(nil, 0)
+    this.passwordWindow = initPasswordEntryWindow(this.onPasswordReturn)
+    this.name = recordName
+    this.record = records[recordName]
+    return this
+}
+
+func (a *accountEditWindow) onPasswordReturn(password []byte) {
+    a.passwordWindow.DestroyQMainWindow()
+    decryptedRecord, err := passwordProtector.DecryptRecord(
+        a.record,
+        a.password,
+    )
+    if err == nil {
+        widget := widgets.NewQWidget(a, 0)
+        a.SetCentralWidget(widget)
+        a.layout = widgets.NewQFormLayout(widgets)
+        a.recordLabel = widgets.NewQLabel2("Account Name:", a, 0)
+        a.recordName = widgets.NewQLineEdit2(a.name, a, 0)
+        a.recordTable = widgets.NewQTableWidget2(len(decryptedRecord), 2, nil)
+        i := 0
+        for key, value := range decryptRecord {
+            a.RecordTable.SetItem(i, 0, widgets.NewQTableWidgetItem2(key, 0))
+            a.recordTable.SetItem(i, 1, widgets.NewQTableWidgetItem2(string(value), 0))
+            i++
+        }
+        a.submitButton = widgets.NewQPushButton2("Submit", a)
+        a.submitButton.ConnectClicked(func(checked bool) {a.submit()})
+        a.layout.AddWidget(a.recordLabel)
+        a.layout.AddWidget(a.recordName)
+        a.layout.AddWidget(a.recordTable)
+        a.layout.AddWidget(a.submitButton)
+        a.Show()
+        return
+    } else {
+        widgets.QMessageBox_About(
+            a,
+            "Decryption Error",
+            "An error occurred while decrypting the record",
+        )
+    }
+    return
+}
+
+func (a *accountEditWindow) submit() {
+    // TODO: Add decrypt record to struct, rewrite this for edit window
+    a.record = map[string][]byte{}
+    for i := 0; i <= a.entryTable.RowCount(); i++ {
+        if a.entryTable.Item(i, 0).Text() == "" && a.entryTable.Item(i, 1).Text() != "" {
+            widgets.QMessageBox_About(
+                a,
+                "Incomplete Entry",
+                "Missing key; please make sure each value has an associated key.",
+            )
+            return
+        }
+        if a.entryTable.Item(i, 0).Text() == "" {
+            continue
+        } else if _, ok := a.record[a.entryTable.Item(i, 0).Text()]; !ok {
+            a.record[a.entryTable.Item(i, 0).Text()] = []byte(a.entryTable.Item(i, 1).Text())
+        } else {
+            widgets.QMessageBox_About(
+                a,
+                "Duplicate Entry",
+                "Duplicate key " + a.entryTable.Item(i, 0).Text() + "; please remove the duplicate entry.",
+            )
+            return
+        }
+    }
+    if len(a.record) == 0 {
+        widgets.QMessageBox_About(
+            a,
+            "No Data",
+            "No data entered.",
+        )
+        return
+    }
+    a.passwordWindow = initPasswordEntryWindow(a.onPasswordReturn)
+}
+
+func (a *accountEditWindow) onPasswordReturn(password []byte) {
+    // TODO: Rewrite for Edit Window
+    a.passwordWindow.DestroyQMainWindow()
+    encryptedRecord, err := password_protector.EncryptRecord(
+        a.record,
+        password,
+    )
+    if err != nil {
+        widgets.QMessageBox_About(
+            a,
+            "Encryption Error",
+            "An error occurred while encrypting the record",
+        )
+        return
+    }
+    a.caller.accountAdded(a.entryName.Text(), encryptedRecord)
 }
 
 func initPasswordEntryWindow(caller func([]byte)) *passwordEntryWindow {
