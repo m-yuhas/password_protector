@@ -1,0 +1,44 @@
+package gui;
+
+import java.awt.EventQueue;
+import java.awt.Menu;
+import java.awt.MenuBar;
+
+import javax.swing.JFrame;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JPanel;
+
+public class Gui {
+
+  public static void main(String[] args) {
+    EventQueue.invokeLater(new Runnable() {
+      
+      @Override
+      public void run() {
+        if (System.getProperty("os.name").contentEquals("Mac OS X")) {
+          System.setProperty("apple.laf.userScreenMenuBar", "true");
+        }
+        JFrame mainFrame = new JFrame("Password Protector");
+        JPanel mainPanel = new JPanel();
+        mainPanel.add(new ListPanel());
+        mainPanel.add(new ControlPanel());
+        mainFrame.add(mainPanel);
+        MenuBar menuBar = new MenuBar();
+        Menu fileMenu = new Menu("File");
+        Menu passwordMenu = new Menu("Password");
+        Menu encryptionMenu = new Menu("Encryption");
+        menuBar.add(fileMenu);
+        menuBar.add(passwordMenu);
+        menuBar.add(encryptionMenu);
+        mainFrame.setMenuBar(menuBar);
+        mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        mainFrame.pack();
+        mainFrame.setVisible(true);
+      }
+      
+    });
+
+  }
+
+}

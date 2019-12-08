@@ -1,0 +1,19 @@
+package gui;
+
+import javax.swing.JScrollPane;
+
+public class ListPanel {
+  
+  private JList accountList;
+
+  public ListPanel() extends JPanel {
+    this.accountList = new JList();
+    this.accountList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+    this.setLayoutOrientation(JList.VERTICAL);
+    this.setVisibleRowCount(-1);
+    JScrollPane listScroller = new JScrollPane(this.accountList);
+    listScroller.setPreferredSize(new Dimension(250, 80));
+    
+  }
+
+}

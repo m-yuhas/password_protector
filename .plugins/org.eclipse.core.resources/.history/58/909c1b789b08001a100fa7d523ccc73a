@@ -1,0 +1,29 @@
+package gui;
+
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+
+public class ControlPanel extends JPanel {
+
+  /**
+   * 
+   */
+  private static final long serialVersionUID = 8932199718088447354L;
+  private JButton viewButton;
+  private JButton addButton;
+  private JButton deleteButton;
+  private JButton modifyButton;
+
+  public ControlPanel() {
+    
+    
+    this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+    this.add(viewButton);
+    this.add(addButton);
+    this.add(deleteButton);
+    this.add(modifyButton);
+  }
+
+}

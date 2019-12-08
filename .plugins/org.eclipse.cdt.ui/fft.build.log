@@ -1,0 +1,7 @@
+21:18:21 **** Build of configuration Default for project fft ****
+make all 
+make: *** No rule to make target `all'.  Stop.
+"make all" terminated with exit code 2. Build might be incomplete.
+
+21:18:36 Build Failed. 1 errors, 0 warnings. (took 14s.744ms)
+
