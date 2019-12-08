@@ -1,7 +1,0 @@
-package gui;
-
-public class ViewWindow extends MainWindow {
-  super();
-  
-
-}
