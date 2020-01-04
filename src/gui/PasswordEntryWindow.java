@@ -82,6 +82,10 @@ public class PasswordEntryWindow {
     this.mainFrame.pack();
   }
   
+  public PasswordEntryWindow(MainWindow context, Object callback) {
+    // TODO Auto-generated constructor stub
+  }
+
   public void show() {
     this.mainFrame.setVisible(true);
   }

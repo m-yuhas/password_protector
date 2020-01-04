@@ -13,7 +13,7 @@ public class ListPanel extends JPanel {
    * 
    */
   private static final long serialVersionUID = -1294042084540205908L;
-  private JList<String> accountList;
+  public JList<String> accountList;
 
   public ListPanel() {
     this.accountList = new JList<String>();

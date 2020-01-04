@@ -26,11 +26,12 @@ import passwordio.EncryptionException;
 
 public class MainWindow {
   
+  private ControlPanel controlPanel;
   private boolean modified = false;
   private File file;
   private JFrame mainFrame;
-  private ListPanel listPanel;
-  private Map<String, passwordio.AccountRecord> recordMap;
+  public ListPanel listPanel;
+  public Map<String, passwordio.AccountRecord> recordMap;
   private MenuItem changeFilePasswordItem;
   private EncryptedBuffer<Map<String, AccountRecord>> encryptedBuffer;
 
@@ -43,7 +44,8 @@ public class MainWindow {
     JPanel mainPanel = new JPanel();
     this.listPanel = new ListPanel();
     mainPanel.add(this.listPanel);
-    mainPanel.add(new ControlPanel());
+    this.controlPanel = new ControlPanel(this);
+    mainPanel.add(this.controlPanel);
     this.mainFrame.add(mainPanel);
     MenuBar menuBar = new MenuBar();
     Menu fileMenu = new Menu("File");
@@ -211,6 +213,56 @@ public class MainWindow {
     } catch (EncryptionException e) {
       e.printStackTrace();
     }
+    return null;
+  }
+  
+  public Void viewRecordCallback(char[] password) {
+    try {
+      Map<String, String> record = this.recordMap.get(this.listPanel.accountList.getSelectedValue()).getRecord(password);
+      AccountWindow accountWindow = new AccountWindow(this, record, false);
+      accountWindow.show();
+    } catch (DecryptionException e) {
+      JOptionPane.showMessageDialog(this.mainFrame, "Password incorrect.", "Error", JOptionPane.ERROR_MESSAGE);
+    }
+    return null;
+  }
+  
+  public Void deleteRecordCallback(char[] password) {
+    try {
+      this.recordMap.get(this.listPanel.accountList.getSelectedValue()).getRecord(password);
+      this.recordMap.remove(this.listPanel.accountList.getSelectedValue());
+      Iterator<Entry<String, AccountRecord>> iterator = recordMap.entrySet().iterator();
+      String[] accountList = new String[this.recordMap.size()];
+      int i = 0;
+      while (iterator.hasNext()) {
+        accountList[i++] = iterator.next().getKey();
+      }
+      this.listPanel.updateAccountList(accountList);
+    } catch (DecryptionException e) {
+      JOptionPane.showMessageDialog(this.mainFrame,  "Password incorrect.", "Error", JOptionPane.ERROR_MESSAGE);
+    }
+    return null;
+  }
+  
+  public Void modifyRecordCallback(char[] password) {
+    try {
+      Map<String, String> record = this.recordMap.get(this.listPanel.accountList.getSelectedValue()).getRecord(password);
+      AccountWindow accountWindow = new AccountWindow(this, record, true);
+      accountWindow.show();
+    } catch (DecryptionException e) {
+      JOptionPane.showMessageDialog(this.mainFrame, "Password incorrect.", "Error", JOptionPane.ERROR_MESSAGE);
+    }
+    return null;
+  }
+  
+  public Void addRecordCallback(String recordName, Map<String, String> recordData) {
+    PasswordEntryWindow passwordEntryWindow = new PasswordEntryWindow(this, this::addRecordCallbackB);
+    passwordEntryWindow.show();
+    return null;
+    
+  }
+  
+  public Void addRecordCallbackB(char[] password) {
     return null;
   }
 

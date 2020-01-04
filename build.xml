@@ -1,0 +1,25 @@
+<project>
+
+    <target name="clean">
+        <delete dir="bin"/>
+    </target>
+
+    <target name="compile_gui">
+        <mkdir dir="bin/classes"/>
+        <javac srcdir="src/gui" destdir="build/"/>
+    </target>
+
+    <target name="gui_jar">
+        <mkdir dir="build/jar"/>
+        <jar destfile="bin/jar/Gui.jar" basedir="bin/classes">
+            <manifest>
+                <attribute name="Main-Class" value="oata.HelloWorld"/>
+            </manifest>
+        </jar>
+    </target>
+
+    <target name="run">
+        <java jar="build/jar/HelloWorld.jar" fork="true"/>
+    </target>
+
+</project>
