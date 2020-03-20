@@ -8,6 +8,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
+import java.util.ArrayList;
 import java.util.Arrays;
 
 import javax.crypto.BadPaddingException;
@@ -30,7 +31,7 @@ public final class Utils {
     throw new UnsupportedOperationException();
   }
   
-  public static boolean validatePassword(byte[] encrypted, char[] password) throws DecryptionException {
+  public static boolean validatePassword(byte[] encrypted, char[] ... passwords) throws DecryptionException {
     if (encrypted.length < Utils.keyLength + Utils.ivLength) {
       throw new DecryptionException("Unable to decrypt: ciphertext may be corrupted.");
     }
@@ -38,6 +39,16 @@ public final class Utils {
       byte[] salt = Arrays.copyOfRange(encrypted, 0, Utils.keyLength);
       byte[] iv = Arrays.copyOfRange(encrypted, Utils.keyLength, Utils.keyLength + Utils.ivLength);
       byte[] cryptoText = Arrays.copyOfRange(encrypted, Utils.keyLength + Utils.ivLength, encrypted.length);
+      ArrayList<Character> passwordCharacters = new ArrayList<Character>();
+      for (char[] p: passwords) {
+        for (char c: p) {
+          passwordCharacters.add(c);
+        }
+      }
+      char[] password = new char[passwordCharacters.size()];
+      for (int i = 0; i < passwordCharacters.size(); i++) {
+        password[i] = passwordCharacters.get(i);
+      }
       SecretKeyFactory secretKeyFactory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
       KeySpec keySpec = new PBEKeySpec(password, salt, Utils.keyGenerationIterations, Utils.keyLength * 8);
       SecretKey secretKey = new SecretKeySpec(secretKeyFactory.generateSecret(keySpec).getEncoded(), "Blowfish");
@@ -56,7 +67,7 @@ public final class Utils {
     }
   }
 
-  public static byte[] decrypt(byte[] encrypted, char[] password) throws DecryptionException {
+  public static byte[] decrypt(byte[] encrypted, char[] ... passwords) throws DecryptionException {
     if (encrypted.length < Utils.keyLength + Utils.ivLength) {
       throw new DecryptionException("Unable to decrypt: ciphertext may be corrumpted.");
     }
@@ -64,6 +75,16 @@ public final class Utils {
       byte[] salt = Arrays.copyOfRange(encrypted, 0, Utils.keyLength);
       byte[] iv = Arrays.copyOfRange(encrypted, Utils.keyLength, Utils.keyLength + Utils.ivLength);
       byte[] cryptoText = Arrays.copyOfRange(encrypted, Utils.keyLength + Utils.ivLength, encrypted.length);
+      ArrayList<Character> passwordCharacters = new ArrayList<Character>();
+      for (char[] p: passwords) {
+        for (char c: p) {
+          passwordCharacters.add(c);
+        }
+      }
+      char[] password = new char[passwordCharacters.size()];
+      for (int i = 0; i < passwordCharacters.size(); i++) {
+        password[i] = passwordCharacters.get(i);
+      }
       SecretKeyFactory secretKeyFactory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
       KeySpec keySpec = new PBEKeySpec(password, salt, Utils.keyGenerationIterations, Utils.keyLength * 8);
       SecretKey secretKey = new SecretKeySpec(secretKeyFactory.generateSecret(keySpec).getEncoded(), "Blowfish");
@@ -81,13 +102,23 @@ public final class Utils {
     }
   }
   
-  public static byte[] encrypt(byte[] unencrypted, char[] password) throws EncryptionException {
+  public static byte[] encrypt(byte[] unencrypted, char[] ... passwords) throws EncryptionException {
     try {
       SecureRandom rn = new SecureRandom();
       byte[] salt = new byte[Utils.keyLength];
       byte[] iv = new byte[Utils.ivLength];
       rn.nextBytes(salt);
       rn.nextBytes(iv);
+      ArrayList<Character> passwordCharacters = new ArrayList<Character>();
+      for (char[] p: passwords) {
+        for (char c: p) {
+          passwordCharacters.add(c);
+        }
+      }
+      char[] password = new char[passwordCharacters.size()];
+      for (int i = 0; i < passwordCharacters.size(); i++) {
+        password[i] = passwordCharacters.get(i);
+      }
       SecretKeyFactory secretKeyFactory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
       KeySpec keySpec = new PBEKeySpec(password, salt, Utils.keyGenerationIterations, Utils.keyLength * 8);
       SecretKey secretKey = new SecretKeySpec(secretKeyFactory.generateSecret(keySpec).getEncoded(), "Blowfish");

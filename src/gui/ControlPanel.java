@@ -52,8 +52,6 @@ public class ControlPanel extends JPanel {
     if (this.parentWindow.listPanel.accountList.isSelectionEmpty()) {
       return;
     }
-    PasswordEntryWindow passwordEntryWindow = new PasswordEntryWindow(parentWindow, this.parentWindow::viewRecordCallback);
-    passwordEntryWindow.show();
   }
   
   private void add() {
@@ -62,12 +60,11 @@ public class ControlPanel extends JPanel {
   }
   
   private void delete() {
-    PasswordEntryWindow passwordEntryWindow = new PasswordEntryWindow(parentWindow, this.parentWindow::deleteRecordCallback);
-    passwordEntryWindow.show();
+
   }
   
   private void modify() {
-    PasswordEntryWindow passwordEntryWindow = new PasswordEntryWindow(parentWindow, this.parentWindow::modifyRecordCallback);
+
   }
 
 }

@@ -13,8 +13,8 @@ public class EncryptedBuffer<T> {
 
   private byte[] encryptedBytes;
   
-  public EncryptedBuffer(T unencryptedData, char[] password) throws EncryptionException {
-    this.updateContents(unencryptedData, password);
+  public EncryptedBuffer(T unencryptedData, char[] ... passwords) throws EncryptionException {
+    this.updateContents(unencryptedData, passwords);
   }
 
   public EncryptedBuffer(byte[] encryptedData) {
@@ -25,9 +25,9 @@ public class EncryptedBuffer<T> {
     this.encryptedBytes = Files.readAllBytes(file.toPath());
   }
   
-  public boolean validatePassword(char[] password) {
+  public boolean validatePassword(char[] ... passwords) {
     try {
-      Utils.decrypt(this.encryptedBytes, password);
+      Utils.decrypt(this.encryptedBytes, passwords);
       return true;
     } catch (DecryptionException e) {
       return false;
@@ -35,9 +35,9 @@ public class EncryptedBuffer<T> {
   }
   
   @SuppressWarnings("unchecked")
-  public T decrypt(char[] password) throws DecryptionException {
+  public T decrypt(char[] ... passwords) throws DecryptionException {
     try {
-      ByteArrayInputStream bytes = new ByteArrayInputStream(Utils.decrypt(this.encryptedBytes, password));
+      ByteArrayInputStream bytes = new ByteArrayInputStream(Utils.decrypt(this.encryptedBytes, passwords));
       ObjectInputStream serialized = new ObjectInputStream(bytes);
       return (T) serialized.readObject();
     } catch (IOException e) {
@@ -47,12 +47,12 @@ public class EncryptedBuffer<T> {
     }
   }
   
-  public void updateContents(T unencryptedData, char[] password) throws EncryptionException {
+  public void updateContents(T unencryptedData, char[] ... passwords) throws EncryptionException {
     try {
       ByteArrayOutputStream bytes = new ByteArrayOutputStream();
       ObjectOutputStream serialized = new ObjectOutputStream(bytes);
       serialized.writeObject(unencryptedData);
-      this.encryptedBytes = Utils.encrypt(bytes.toByteArray(), password);
+      this.encryptedBytes = Utils.encrypt(bytes.toByteArray(), passwords);
     } catch (IOException e) {
       throw new EncryptionException("Error occurred converting bytes to object output stream.");
     } 

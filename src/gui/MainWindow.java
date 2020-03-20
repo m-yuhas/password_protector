@@ -1,12 +1,16 @@
 package gui;
 
+import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Menu;
 import java.awt.MenuBar;
 import java.awt.MenuItem;
 import java.awt.MenuShortcut;
+import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
@@ -14,10 +18,16 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JPasswordField;
+import javax.swing.JTextField;
 
 import passwordio.AccountRecord;
 import passwordio.DecryptionException;
@@ -31,12 +41,12 @@ public class MainWindow {
   private File file;
   private JFrame mainFrame;
   public ListPanel listPanel;
-  public Map<String, passwordio.AccountRecord> recordMap;
+  public Map<String, String> recordMap;
   private MenuItem changeFilePasswordItem;
-  private EncryptedBuffer<Map<String, AccountRecord>> encryptedBuffer;
+  private EncryptedBuffer<Map<String, String>> encryptedBuffer;
 
   public MainWindow() {
-    this.recordMap = new HashMap<String, passwordio.AccountRecord>();
+    this.recordMap = new HashMap<String, String>();
     if (System.getProperty("os.name").contentEquals("Mac OS X")) {
       System.setProperty("apple.laf.userScreenMenuBar", "true");
     }
@@ -131,20 +141,25 @@ public class MainWindow {
   
   public void newWorkspace() {
     this.file = null;
-    this.recordMap = new HashMap<String, passwordio.AccountRecord>();
+    this.recordMap = new HashMap<String, String>();
     this.listPanel.updateAccountList(new String[0]);
   }
 
   public void openFile() {
-    PasswordEntryWindow passwordEntryWindow = new PasswordEntryWindow(this, this::openFileCallback);
-    passwordEntryWindow.show();
+    System.out.println("HERE");
+    PasswordEntryWindow pew = new PasswordEntryWindow();
+    char[][] passwords = pew.getPasswords();
+    for (char[] p: passwords) {
+      System.out.println(p);
+    }
+    System.out.println("DONE");
   }
   
   public Void openFileCallback(char[] password) {
     try {
-      this.encryptedBuffer = new EncryptedBuffer<Map<String, passwordio.AccountRecord>>(this.file);
+      this.encryptedBuffer = new EncryptedBuffer<Map<String, String>>(this.file);
       this.recordMap = encryptedBuffer.decrypt(password);
-      Iterator<Entry<String, AccountRecord>> iterator = recordMap.entrySet().iterator();
+      Iterator<Entry<String, String>> iterator = recordMap.entrySet().iterator();
       String[] accountList = new String[this.recordMap.size()];
       int i = 0;
       while (iterator.hasNext()) {
@@ -162,8 +177,12 @@ public class MainWindow {
   }
   
   public void saveFile() {
-    PasswordEntryWindow passwordEntryWindow = new PasswordEntryWindow(this, this::saveFileCallback);
-    passwordEntryWindow.show();
+    PasswordEntryWindow pew = new PasswordEntryWindow();
+    /*
+    char[][] passwords = pew.getPassword();
+    for (char[] p: passwords) {
+      System.out.println(p);
+    }*/
   }
   
   public Void saveFileCallback(char[] password) {
@@ -178,7 +197,7 @@ public class MainWindow {
       }
     } else {
       try {
-        this.encryptedBuffer = new EncryptedBuffer<Map<String, passwordio.AccountRecord>>(this.recordMap, password);
+        this.encryptedBuffer = new EncryptedBuffer<Map<String, String>>(this.recordMap, password);
       } catch (EncryptionException e) {
         e.printStackTrace();
       }
@@ -193,23 +212,31 @@ public class MainWindow {
   }
   
   public void changeFilePassword() {
-    PasswordEntryWindow passwordEntryWindow = new PasswordEntryWindow(this, this::changeFilePasswordCallbackA);
-    passwordEntryWindow.show();
+    PasswordEntryWindow pew = new PasswordEntryWindow();
+    /*
+    char[][] passwords = pew.getPasswords();
+    for (char[] p: passwords) {
+      System.out.println(p);
+    }*/
   }
   
   public Void changeFilePasswordCallbackA(char[] password) {
     if (!this.encryptedBuffer.validatePassword(password)) {
       JOptionPane.showMessageDialog(this.mainFrame, "Password incorrect.", "Error", JOptionPane.ERROR_MESSAGE);
     } else {
-      PasswordEntryWindow passwordEntryWindow = new PasswordEntryWindow(this, this::changeFilePasswordCallbackB);
-      passwordEntryWindow.show();
+      PasswordEntryWindow pew = new PasswordEntryWindow();
+      /*
+      char[][] passwords = pew.getPin();
+      for (char[] p: passwords) {
+        System.out.println(p);
+      }*/
     }
     return null;
   }
   
   public Void changeFilePasswordCallbackB(char[] password) {
     try {
-      this.encryptedBuffer = new EncryptedBuffer<Map<String, passwordio.AccountRecord>>(this.recordMap, password);
+      this.encryptedBuffer = new EncryptedBuffer<Map<String, String>>(this.recordMap, password);
     } catch (EncryptionException e) {
       e.printStackTrace();
     }
@@ -217,52 +244,38 @@ public class MainWindow {
   }
   
   public Void viewRecordCallback(char[] password) {
-    try {
-      Map<String, String> record = this.recordMap.get(this.listPanel.accountList.getSelectedValue()).getRecord(password);
-      AccountWindow accountWindow = new AccountWindow(this, record, false);
-      accountWindow.show();
-    } catch (DecryptionException e) {
-      JOptionPane.showMessageDialog(this.mainFrame, "Password incorrect.", "Error", JOptionPane.ERROR_MESSAGE);
-    }
+    AccountWindow accountWindow = new AccountWindow(this, this.recordMap, false);
+    accountWindow.show();
     return null;
   }
   
   public Void deleteRecordCallback(char[] password) {
-    try {
-      this.recordMap.get(this.listPanel.accountList.getSelectedValue()).getRecord(password);
-      this.recordMap.remove(this.listPanel.accountList.getSelectedValue());
-      Iterator<Entry<String, AccountRecord>> iterator = recordMap.entrySet().iterator();
-      String[] accountList = new String[this.recordMap.size()];
-      int i = 0;
-      while (iterator.hasNext()) {
-        accountList[i++] = iterator.next().getKey();
-      }
-      this.listPanel.updateAccountList(accountList);
-    } catch (DecryptionException e) {
-      JOptionPane.showMessageDialog(this.mainFrame,  "Password incorrect.", "Error", JOptionPane.ERROR_MESSAGE);
+    this.recordMap.get(this.listPanel.accountList.getSelectedValue());
+    this.recordMap.remove(this.listPanel.accountList.getSelectedValue());
+    Iterator<Entry<String, String>> iterator = recordMap.entrySet().iterator();
+    String[] accountList = new String[this.recordMap.size()];
+    int i = 0;
+    while (iterator.hasNext()) {
+      accountList[i++] = iterator.next().getKey();
     }
+    this.listPanel.updateAccountList(accountList);
     return null;
   }
   
   public Void modifyRecordCallback(char[] password) {
-    try {
-      Map<String, String> record = this.recordMap.get(this.listPanel.accountList.getSelectedValue()).getRecord(password);
-      AccountWindow accountWindow = new AccountWindow(this, record, true);
-      accountWindow.show();
-    } catch (DecryptionException e) {
-      JOptionPane.showMessageDialog(this.mainFrame, "Password incorrect.", "Error", JOptionPane.ERROR_MESSAGE);
-    }
+    AccountWindow accountWindow = new AccountWindow(this, recordMap, true);
+    accountWindow.show();
     return null;
   }
   
   public Void addRecordCallback(String recordName, Map<String, String> recordData) {
-    PasswordEntryWindow passwordEntryWindow = new PasswordEntryWindow(this, this::addRecordCallbackB);
-    passwordEntryWindow.show();
     return null;
     
   }
   
   public Void addRecordCallbackB(char[] password) {
+    this.recordMap.put("Test", "Blah");
+    //this.listPanel.updateAccountList(options);
     return null;
   }
 
