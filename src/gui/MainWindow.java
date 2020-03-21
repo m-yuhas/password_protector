@@ -1,35 +1,22 @@
 package gui;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Menu;
 import java.awt.MenuBar;
 import java.awt.MenuItem;
 import java.awt.MenuShortcut;
-import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
-import java.util.Map.Entry;
 
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JPasswordField;
-import javax.swing.JTextField;
 
-import passwordio.AccountRecord;
 import passwordio.DecryptionException;
 import passwordio.EncryptedBuffer;
 import passwordio.EncryptionException;
@@ -37,22 +24,22 @@ import passwordio.EncryptionException;
 public class MainWindow {
   
   private ControlPanel controlPanel;
-  private boolean modified = false;
+  public boolean modified = false;
   private File file;
   private JFrame mainFrame;
   public ListPanel listPanel;
-  public Map<String, String> recordMap;
+  public Map<String, Map<String, String>> recordMap;
   private MenuItem changeFilePasswordItem;
-  private EncryptedBuffer<Map<String, String>> encryptedBuffer;
+  private EncryptedBuffer<Map<String, Map<String, String>>> encryptedBuffer;
 
   public MainWindow() {
-    this.recordMap = new HashMap<String, String>();
+    this.recordMap = new HashMap<String, Map<String,String>>();
     if (System.getProperty("os.name").contentEquals("Mac OS X")) {
       System.setProperty("apple.laf.userScreenMenuBar", "true");
     }
     this.mainFrame = new JFrame("Password Protector");
     JPanel mainPanel = new JPanel();
-    this.listPanel = new ListPanel();
+    this.listPanel = new ListPanel(this);
     mainPanel.add(this.listPanel);
     this.controlPanel = new ControlPanel(this);
     mainPanel.add(this.controlPanel);
@@ -85,27 +72,11 @@ public class MainWindow {
     });
     openItem.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
-        JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-        fileChooser.setMultiSelectionEnabled(false);
-        int returnCode = fileChooser.showOpenDialog(mainFrame);
-        if (returnCode == JFileChooser.APPROVE_OPTION) {
-          file = fileChooser.getSelectedFile();
-          openFile();
-        }
+        openFile();
       }
     });
     saveItem.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
-        if (file == null) {
-          JFileChooser fileChooser = new JFileChooser();
-          fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-          fileChooser.setMultiSelectionEnabled(false);
-          int returnCode = fileChooser.showOpenDialog(mainFrame);
-          if (returnCode == JFileChooser.APPROVE_OPTION) {
-            file = fileChooser.getSelectedFile();
-          }
-        }
         saveFile();
       }
     });
@@ -141,74 +112,73 @@ public class MainWindow {
   
   public void newWorkspace() {
     this.file = null;
-    this.recordMap = new HashMap<String, String>();
-    this.listPanel.updateAccountList(new String[0]);
+    this.recordMap = new HashMap<String, Map<String, String>>();
+    this.listPanel.updateAccountList();
   }
 
   public void openFile() {
-    System.out.println("HERE");
-    PasswordEntryWindow pew = new PasswordEntryWindow();
-    char[][] passwords = pew.getPasswords();
-    for (char[] p: passwords) {
-      System.out.println(p);
+    JFileChooser fileChooser = new JFileChooser();
+    fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+    fileChooser.setMultiSelectionEnabled(false);
+    if (fileChooser.showOpenDialog(this.mainFrame) != JFileChooser.APPROVE_OPTION) {
+      return;
     }
-    System.out.println("DONE");
-  }
-  
-  public Void openFileCallback(char[] password) {
+    this.file = fileChooser.getSelectedFile();
+    char[][] passwords = new PasswordEntryWindow().getPasswords();
     try {
-      this.encryptedBuffer = new EncryptedBuffer<Map<String, String>>(this.file);
-      this.recordMap = encryptedBuffer.decrypt(password);
-      Iterator<Entry<String, String>> iterator = recordMap.entrySet().iterator();
-      String[] accountList = new String[this.recordMap.size()];
-      int i = 0;
-      while (iterator.hasNext()) {
-        accountList[i++] = iterator.next().getKey();
-      }
-      this.listPanel.updateAccountList(accountList);
-      this.changeFilePasswordItem.setEnabled(true);
-    } catch (DecryptionException e) {
-      System.out.println("ERROR");
-      System.out.println(e);
+      this.encryptedBuffer = new EncryptedBuffer<Map<String, Map<String, String>>>(this.file);
     } catch (IOException e) {
-      System.out.println("IO ERROR");
+      // TODO Auto-generated catch block
+      e.printStackTrace();
     }
-    return null;
+    try {
+      this.recordMap = encryptedBuffer.decrypt(passwords[0], passwords[1]);
+    } catch (DecryptionException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+    this.listPanel.updateAccountList();
+    this.changeFilePasswordItem.setEnabled(true);
   }
   
   public void saveFile() {
-    PasswordEntryWindow pew = new PasswordEntryWindow();
-    /*
-    char[][] passwords = pew.getPassword();
-    for (char[] p: passwords) {
-      System.out.println(p);
-    }*/
-  }
-  
-  public Void saveFileCallback(char[] password) {
+    if (this.file == null) {
+      JFileChooser fileChooser = new JFileChooser();
+      fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+      fileChooser.setMultiSelectionEnabled(false);
+      int returnCode = fileChooser.showSaveDialog(mainFrame);
+      if (returnCode != JFileChooser.APPROVE_OPTION) {
+        return;
+      }
+      this.file = fileChooser.getSelectedFile();
+    }
+    char[][] passwords = new PasswordEntryWindow().getPasswords();
     if (this.encryptedBuffer != null) {
-      if (!this.encryptedBuffer.validatePassword(password)) {
+      if (!this.encryptedBuffer.validatePassword(passwords)) {
         JOptionPane.showMessageDialog(this.mainFrame, "Password incorrect.", "Error", JOptionPane.ERROR_MESSAGE);
+        return;
       }
       try {
-        this.encryptedBuffer.updateContents(this.recordMap, password);
+        this.encryptedBuffer.updateContents(this.recordMap, passwords);
       } catch (EncryptionException e) {
+        //TODO: this
         e.printStackTrace();
       }
     } else {
       try {
-        this.encryptedBuffer = new EncryptedBuffer<Map<String, String>>(this.recordMap, password);
+        this.encryptedBuffer = new EncryptedBuffer<Map<String, Map<String, String>>>(this.recordMap, passwords);
       } catch (EncryptionException e) {
+        //TODO : this
         e.printStackTrace();
       }
     }
     try {
       this.encryptedBuffer.writeToFile(this.file);
     } catch (IOException e) {
+      //TODO: this
       e.printStackTrace();
     }
     this.modified = false;
-    return null;
   }
   
   public void changeFilePassword() {
@@ -218,65 +188,6 @@ public class MainWindow {
     for (char[] p: passwords) {
       System.out.println(p);
     }*/
-  }
-  
-  public Void changeFilePasswordCallbackA(char[] password) {
-    if (!this.encryptedBuffer.validatePassword(password)) {
-      JOptionPane.showMessageDialog(this.mainFrame, "Password incorrect.", "Error", JOptionPane.ERROR_MESSAGE);
-    } else {
-      PasswordEntryWindow pew = new PasswordEntryWindow();
-      /*
-      char[][] passwords = pew.getPin();
-      for (char[] p: passwords) {
-        System.out.println(p);
-      }*/
-    }
-    return null;
-  }
-  
-  public Void changeFilePasswordCallbackB(char[] password) {
-    try {
-      this.encryptedBuffer = new EncryptedBuffer<Map<String, String>>(this.recordMap, password);
-    } catch (EncryptionException e) {
-      e.printStackTrace();
-    }
-    return null;
-  }
-  
-  public Void viewRecordCallback(char[] password) {
-    AccountWindow accountWindow = new AccountWindow(this, this.recordMap, false);
-    accountWindow.show();
-    return null;
-  }
-  
-  public Void deleteRecordCallback(char[] password) {
-    this.recordMap.get(this.listPanel.accountList.getSelectedValue());
-    this.recordMap.remove(this.listPanel.accountList.getSelectedValue());
-    Iterator<Entry<String, String>> iterator = recordMap.entrySet().iterator();
-    String[] accountList = new String[this.recordMap.size()];
-    int i = 0;
-    while (iterator.hasNext()) {
-      accountList[i++] = iterator.next().getKey();
-    }
-    this.listPanel.updateAccountList(accountList);
-    return null;
-  }
-  
-  public Void modifyRecordCallback(char[] password) {
-    AccountWindow accountWindow = new AccountWindow(this, recordMap, true);
-    accountWindow.show();
-    return null;
-  }
-  
-  public Void addRecordCallback(String recordName, Map<String, String> recordData) {
-    return null;
-    
-  }
-  
-  public Void addRecordCallbackB(char[] password) {
-    this.recordMap.put("Test", "Blah");
-    //this.listPanel.updateAccountList(options);
-    return null;
   }
 
 }

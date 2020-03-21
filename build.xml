@@ -1,12 +1,31 @@
-<project>
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="PasswordProtector" default="gui_jar" basedir=".">
+	<description>
+	   Utility to store passwords locally
+	</description>
 
     <target name="clean">
         <delete dir="bin"/>
     </target>
+	
+	<target name="compile_lib">
+	   <mkdir dir="build/classes/passwordio"/>
+	   <javac srcdir="src/passwordio" destdir="build/classes/passwordio"/>
+	</target>
+		
+    <target name="lib_jar">
+	   <mkdir dir="dist" />
+	   <jar destfile="dist/passwordio.jar" basedir="build/classes/passwordio" />
+	</target>
 
     <target name="compile_gui">
         <mkdir dir="bin/classes"/>
-        <javac srcdir="src/gui" destdir="build/"/>
+        <javac srcdir="src/gui" destdir="build/">
+    	   <classpath>
+    	        <pathelement path="${classpath}"/>
+    	        <pathelement path="dist"/>
+    	    </classpath>
+        </javac>
     </target>
 
     <target name="gui_jar">

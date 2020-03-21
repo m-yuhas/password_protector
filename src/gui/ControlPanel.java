@@ -2,6 +2,7 @@ package gui;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.HashMap;
 
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
@@ -49,22 +50,27 @@ public class ControlPanel extends JPanel {
   }
   
   private void view() {
-    if (this.parentWindow.listPanel.accountList.isSelectionEmpty()) {
-      return;
+    if (!this.parentWindow.listPanel.accountList.isSelectionEmpty()) {
+      String recordName = this.parentWindow.listPanel.accountList.getSelectedValue();
+      new AccountWindow(this.parentWindow, this.parentWindow.recordMap.get(recordName), recordName, false);
     }
   }
   
   private void add() {
-    AccountWindow accountWindow = new AccountWindow(this.parentWindow);
-    accountWindow.show();
+    new AccountWindow(this.parentWindow, new HashMap<String, String>(), "", true);
   }
   
   private void delete() {
-
+    if (!this.parentWindow.listPanel.accountList.isSelectionEmpty()) {
+      char[][] passwords = new PasswordEntryWindow().getPasswords();
+    }
   }
   
   private void modify() {
-
+    if (!this.parentWindow.listPanel.accountList.isSelectionEmpty()) {
+      String recordName = this.parentWindow.listPanel.accountList.getSelectedValue();
+      new AccountWindow(this.parentWindow, this.parentWindow.recordMap.get(recordName), recordName, true);
+    }
   }
 
 }
