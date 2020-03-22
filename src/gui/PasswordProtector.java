@@ -2,15 +2,14 @@ package gui;
 
 import java.awt.EventQueue;
 
-public class Gui {
+public class PasswordProtector {
 
-  public static void main(String[] args) {
+  public static void main(String[] args) { 
     EventQueue.invokeLater(new Runnable() {
       
       @Override
       public void run() {
-        MainWindow mainWindow = new MainWindow();
-        mainWindow.show();
+        new MainWindow();
       }
       
     });

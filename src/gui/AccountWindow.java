@@ -32,41 +32,6 @@ public class AccountWindow {
   private JButton quitButton;
   private JLabel nameLabel;
   private JTextField nameField;
-  
-  
-  /*
-  public AccountWindow(MainWindow parentWindow) {
-    this.parentWindow = parentWindow;
-    this.mainFrame = new JFrame();
-    this.mainPanel = new JPanel();
-    DefaultTableModel m = new DefaultTableModel();
-    m.addColumn("Attribute");
-    m.addColumn("Value");
-    for (int i = 0; i < 12; i++) {
-      m.addRow(new String[] {"", ""});
-    }
-    this.table = new JTable(m);
-    this.mainPanel.setLayout(new BoxLayout(this.mainPanel, BoxLayout.Y_AXIS));
-    this.mainPanel.add(new JScrollPane(this.table));
-    this.saveButton = new JButton("Save");
-    this.quitButton = new JButton("Quit");
-    
-    this.saveButton.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent e) {
-        saveRecord();
-      }
-    });
-    
-    this.quitButton.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent e) {
-        mainFrame.dispatchEvent(new WindowEvent(mainFrame, WindowEvent.WINDOW_CLOSING));
-      }
-    });
-    
-    this.mainPanel.add(this.saveButton);
-    this.mainPanel.add(this.quitButton);
-    this.mainFrame.add(this.mainPanel);
-  }*/
 
   public AccountWindow(MainWindow parentWindow, Map<String, String> attributes, String name, boolean isEditable) {
     this.parentWindow = parentWindow;

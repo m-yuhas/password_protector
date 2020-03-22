@@ -3,6 +3,19 @@
 	<description>
 	   Utility to store passwords locally
 	</description>
+	
+    <property name="src.dir"     value="src"/>
+
+    <property name="build.dir"   value="build"/>
+    <property name="classes.dir" value="${build.dir}/classes"/>
+    <property name="jar.dir"     value="dist"/>
+	
+	<path id="myclasspath">
+
+		<fileset dir="${jar.dir}" includes="**/*.jar"/>
+	</path>
+
+    <property name="main-class"  value="oata.HelloWorld"/>
 
     <target name="clean">
         <delete dir="bin"/>
@@ -20,19 +33,15 @@
 
     <target name="compile_gui">
         <mkdir dir="bin/classes"/>
-        <javac srcdir="src/gui" destdir="build/">
-    	   <classpath>
-    	        <pathelement path="${classpath}"/>
-    	        <pathelement path="dist"/>
-    	    </classpath>
-        </javac>
+        <javac srcdir="src/gui" destdir="build/" classpathref="myclasspath"/>
     </target>
 
     <target name="gui_jar">
-        <mkdir dir="build/jar"/>
-        <jar destfile="bin/jar/Gui.jar" basedir="bin/classes">
+        <mkdir dir="dist"/>
+        <jar destfile="dist/PasswordProtector.jar" basedir="build/">
+            <zipgroupfileset dir="dist" includes="passwordio.jar"/>
             <manifest>
-                <attribute name="Main-Class" value="oata.HelloWorld"/>
+                <attribute name="Main-Class" value="gui.Gui"/> 
             </manifest>
         </jar>
     </target>

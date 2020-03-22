@@ -1,0 +1,8 @@
+apply plugin: 'java'
+
+task compileOne (type: JavaCompile) {
+    source = sourceSets.passwordio
+    destinationDir = sourceSets.build
+}
+
+compileOne.options.compilerArgs = ["-sourcepath", "$projectDir/src/passwordio"]

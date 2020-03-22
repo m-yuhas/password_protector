@@ -38,6 +38,12 @@ public class MainWindow {
       System.setProperty("apple.laf.userScreenMenuBar", "true");
     }
     this.mainFrame = new JFrame("Password Protector");
+    this.mainFrame.addWindowListener(new java.awt.event.WindowAdapter() {
+      @Override
+      public void windowClosing(java.awt.event.WindowEvent windowEvent) {
+        quit();
+      }
+    });
     JPanel mainPanel = new JPanel();
     this.listPanel = new ListPanel(this);
     mainPanel.add(this.listPanel);
@@ -52,21 +58,6 @@ public class MainWindow {
     this.changeFilePasswordItem = new MenuItem("Change File Password");
     newItem.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
-        if (recordMap.size() != 0) {
-          Object[] options = {"Save", "Discard"};
-          int returnCode = JOptionPane.showOptionDialog(
-              mainFrame,
-              "There are unsaved changes in the current workspace.  Would you like to save before creating a new one?",
-              "Save or Discard Changes?",
-              JOptionPane.YES_NO_OPTION,
-              JOptionPane.QUESTION_MESSAGE,
-              null,
-              options,
-              options[0]);
-          if (returnCode == JOptionPane.YES_OPTION) {
-            saveFile();
-          }
-        }
         newWorkspace();
       }
     });
@@ -104,13 +95,25 @@ public class MainWindow {
     this.mainFrame.setMenuBar(menuBar);
     this.mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     this.mainFrame.pack();
-  }
-  
-  public void show() {
     this.mainFrame.setVisible(true);
   }
   
   public void newWorkspace() {
+    if (this.recordMap.size() != 0) {
+      Object[] options = {"Save", "Discard"};
+      int returnCode = JOptionPane.showOptionDialog(
+          this.mainFrame,
+          "There are unsaved changes in the current workspace.  Would you like to save before creating a new one?",
+          "Save or Discard Changes?",
+          JOptionPane.YES_NO_OPTION,
+          JOptionPane.QUESTION_MESSAGE,
+          null,
+          options,
+          options[0]);
+      if (returnCode == JOptionPane.YES_OPTION) {
+        saveFile();
+      }
+    }
     this.file = null;
     this.recordMap = new HashMap<String, Map<String, String>>();
     this.listPanel.updateAccountList();
@@ -124,18 +127,24 @@ public class MainWindow {
       return;
     }
     this.file = fileChooser.getSelectedFile();
-    char[][] passwords = new PasswordEntryWindow().getPasswords();
+    char[][] passwords = new PasswordEntryWindow("Enter the passwords needed to unlock this file:").getPasswords();
     try {
       this.encryptedBuffer = new EncryptedBuffer<Map<String, Map<String, String>>>(this.file);
     } catch (IOException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
+      JOptionPane.showMessageDialog(this.mainFrame,
+          "IOException occurred while attempting to open the file.",
+          "IOException",
+          JOptionPane.ERROR_MESSAGE);
+      return;
     }
     try {
       this.recordMap = encryptedBuffer.decrypt(passwords[0], passwords[1]);
     } catch (DecryptionException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
+      JOptionPane.showMessageDialog(this.mainFrame,
+          "One or more of the passwords was incorrect.",
+          "Incorrect Password",
+          JOptionPane.ERROR_MESSAGE);
+      return;
     }
     this.listPanel.updateAccountList();
     this.changeFilePasswordItem.setEnabled(true);
@@ -152,42 +161,116 @@ public class MainWindow {
       }
       this.file = fileChooser.getSelectedFile();
     }
-    char[][] passwords = new PasswordEntryWindow().getPasswords();
+    char[][] passwords = new PasswordEntryWindow("Enter the passwords needed save this file:").getPasswords();
     if (this.encryptedBuffer != null) {
       if (!this.encryptedBuffer.validatePassword(passwords)) {
-        JOptionPane.showMessageDialog(this.mainFrame, "Password incorrect.", "Error", JOptionPane.ERROR_MESSAGE);
+        JOptionPane.showMessageDialog(this.mainFrame,
+            "One or more of the passwords was incorrect.",
+            "Incorrect Password",
+            JOptionPane.ERROR_MESSAGE);
         return;
       }
       try {
         this.encryptedBuffer.updateContents(this.recordMap, passwords);
       } catch (EncryptionException e) {
-        //TODO: this
-        e.printStackTrace();
+        JOptionPane.showMessageDialog(this.mainFrame,
+            "EncryptionException occurred while encrypting the data.",
+            "EncryptionException",
+            JOptionPane.ERROR_MESSAGE);
+        return;
       }
     } else {
       try {
-        this.encryptedBuffer = new EncryptedBuffer<Map<String, Map<String, String>>>(this.recordMap, passwords);
+        this.encryptedBuffer = new EncryptedBuffer<Map<String, Map<String, String>>>(this.recordMap, passwords[0], passwords[1]);
       } catch (EncryptionException e) {
-        //TODO : this
-        e.printStackTrace();
+        JOptionPane.showMessageDialog(this.mainFrame,
+            "EncryptionException occurred while encrypting the data.",
+            "EncryptionException",
+            JOptionPane.ERROR_MESSAGE);
+        return;
       }
     }
     try {
       this.encryptedBuffer.writeToFile(this.file);
     } catch (IOException e) {
-      //TODO: this
-      e.printStackTrace();
+      JOptionPane.showMessageDialog(this.mainFrame,
+          "IOException occurred while attempting to open the file.",
+          "IOException",
+          JOptionPane.ERROR_MESSAGE);
+      return;
     }
     this.modified = false;
   }
   
   public void changeFilePassword() {
-    PasswordEntryWindow pew = new PasswordEntryWindow();
-    /*
-    char[][] passwords = pew.getPasswords();
-    for (char[] p: passwords) {
-      System.out.println(p);
-    }*/
+    if (this.encryptedBuffer == null) {
+      JOptionPane.showMessageDialog(this.mainFrame,
+          "No passwords file is currently loaded.",
+          "Error",
+          JOptionPane.ERROR_MESSAGE);
+      return;
+    }
+    if (this.modified) {
+    Object[] options = {"Save", "Discard"};
+      int returnCode = JOptionPane.showOptionDialog(
+          this.mainFrame,
+          "There are unsaved changes in the current workspace.  These will be automatically saved and written to the disk.  Is it okay to procede?",
+          "Save or Discard Changes?",
+          JOptionPane.YES_NO_OPTION,
+          JOptionPane.QUESTION_MESSAGE,
+          null,
+          options,
+          options[0]);
+      if (returnCode == JOptionPane.NO_OPTION) {
+        return;
+      }
+    }
+    char[][] oldPasswords = new PasswordEntryWindow("Enter the current passwords for this file:").getPasswords();
+    if (!this.encryptedBuffer.validatePassword(oldPasswords[0], oldPasswords[1])) {
+      JOptionPane.showMessageDialog(this.mainFrame,
+          "One or more of the passwords was incorrect.",
+          "Incorrect Password",
+          JOptionPane.ERROR_MESSAGE);
+      return;
+    }
+    char[][] newPasswords = new PasswordEntryWindow("Enter the new passwords for this file:").getPasswords();
+    try {
+      this.encryptedBuffer = new EncryptedBuffer<Map<String, Map<String, String>>>(this.recordMap, newPasswords[0], newPasswords[1]);
+    } catch (EncryptionException e) {
+      JOptionPane.showMessageDialog(this.mainFrame,
+          "EncryptionException occurred while encrypting the data.",
+          "EncryptionException",
+          JOptionPane.ERROR_MESSAGE);
+      return;
+    }
+    try {
+      this.encryptedBuffer.writeToFile(this.file);
+    } catch (IOException e) {
+      JOptionPane.showMessageDialog(this.mainFrame,
+          "IOException occurred while attempting to open the file.",
+          "IOException",
+          JOptionPane.ERROR_MESSAGE);
+      return;
+    }
+    this.modified = false;
+    JOptionPane.showMessageDialog(this.mainFrame,
+        "File passwords updated successfully.",
+        "Success",
+        JOptionPane.INFORMATION_MESSAGE);
+    return;
+  }
+  
+  private void quit() {
+    if (modified) {
+      if (JOptionPane.showConfirmDialog(mainFrame, 
+          "There are unsaved changes in this workspace, do you want to save your changes?",
+          "Unsaved Changes", 
+          JOptionPane.YES_NO_OPTION,
+          JOptionPane.QUESTION_MESSAGE) == JOptionPane.YES_OPTION){
+        this.saveFile();
+      }
+      System.out.println("No Option");
+    }
   }
 
 }
