@@ -83,6 +83,11 @@ public class MainWindow {
     fileMenu.add(changeFilePasswordItem);
     Menu passwordMenu = new Menu("Password");
     MenuItem generatePasswordItem = new MenuItem("Generate Password");
+    generatePasswordItem.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent e) {
+        generatePassword();
+      }
+    });
     passwordMenu.add(generatePasswordItem);
     Menu encryptionMenu = new Menu("Encryption");
     MenuItem encryptFileItem = new MenuItem("Encrypt File");
@@ -273,4 +278,7 @@ public class MainWindow {
     }
   }
 
+  private void generatePassword() {
+    new GeneratePasswordWindow();
+  }
 }
