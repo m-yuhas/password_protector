@@ -20,15 +20,19 @@ public class PasswordEntryWindow extends JDialog {
    * 
    */
   private static final long serialVersionUID = 5118665644770822849L;
+  private int numberOfPasswords;
   private JButton submitButton;
   private JPanel mainPanel;
   private JLabel message;
   private JLabel password1Label;
   private JLabel password2Label;
+  private JLabel[] passwordLabels;
   private JPasswordField password1Field;
   private JPasswordField password2Field;
+  private JPasswordField[] passwordFields;
 
-  public PasswordEntryWindow(String message) {
+  public PasswordEntryWindow(String message, int numberOfPasswords) {
+    this.numberOfPasswords = numberOfPasswords;
     this.setModal(true);
     this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
     this.setLocationRelativeTo(null);
@@ -43,6 +47,17 @@ public class PasswordEntryWindow extends JDialog {
     messagePanel.add(this.message);
     this.mainPanel.add(messagePanel);
 
+    this.passwordLabels = new JLabel[this.numberOfPasswords];
+    this.passwordFields = new JPasswordField[this.numberOfPasswords];
+    for (int i = 0; i < this.numberOfPasswords; i++) {
+      JPanel passwordPanel = new JPanel();
+      this.passwordLabels[i] = new JLabel("Password " + Integer.toString(i+1) + ":");
+      passwordPanel.add(this.passwordLabels[i]);
+      this.passwordFields[i] = new JPasswordField(32);
+      passwordPanel.add(this.passwordFields[i]);
+      this.mainPanel.add(passwordPanel);
+    }
+    /*
     JPanel password1Panel = new JPanel();
     this.password1Label = new JLabel("Password 1:");
     password1Panel.add(this.password1Label);
@@ -58,6 +73,7 @@ public class PasswordEntryWindow extends JDialog {
     this.password2Field = new JPasswordField(32);
     password2Panel.add(this.password2Field);
     this.mainPanel.add(password2Panel);
+    */
 
     this.submitButton = new JButton("Submit");
     ListenForButton listener = new ListenForButton();
@@ -79,7 +95,14 @@ public class PasswordEntryWindow extends JDialog {
   }
 
   public char[][] getPasswords() {
+    char[][] passwords = new char[this.numberOfPasswords][];
+    for (int i = 0; i < this.numberOfPasswords; i++) {
+      passwords[i] = this.passwordFields[i].getPassword();
+    }
+    return passwords;
+    /*
     return new char[][] {this.password1Field.getPassword(), this.password2Field.getPassword()};
+    */
   }
 
 }

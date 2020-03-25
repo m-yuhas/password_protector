@@ -62,7 +62,7 @@ public class ControlPanel extends JPanel {
   
   private void delete() {
     if (!this.parentWindow.listPanel.accountList.isSelectionEmpty()) {
-      char[][] passwords = new PasswordEntryWindow("Enter the file passwords to confirm deletion.").getPasswords();
+      char[][] passwords = new PasswordEntryWindow("Enter the file passwords to confirm deletion.", 2).getPasswords();
     }
   }
   
