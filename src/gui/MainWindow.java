@@ -27,11 +27,11 @@ public class MainWindow {
   private ControlPanel controlPanel;
   public boolean modified = false;
   private File file;
-  private JFrame mainFrame;
+  JFrame mainFrame;
   public ListPanel listPanel;
   public Map<String, Map<String, String>> recordMap;
   private MenuItem changeFilePasswordItem;
-  private EncryptedBuffer<Map<String, Map<String, String>>> encryptedBuffer;
+  EncryptedBuffer<Map<String, Map<String, String>>> encryptedBuffer;
 
   public MainWindow() {
     this.recordMap = new HashMap<String, Map<String,String>>();
@@ -310,7 +310,7 @@ public class MainWindow {
         inputBytesObject[i++] = b;
       }
       buffer = new EncryptedBuffer<Byte[]>(inputBytesObject, passwords);
-    } catch (IOException e1) {
+    } catch (IOException e) {
       JOptionPane.showMessageDialog(this.mainFrame,
           "IOException occurred while attempting to open the file.",
           "IOException",

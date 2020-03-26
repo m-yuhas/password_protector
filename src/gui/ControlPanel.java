@@ -6,6 +6,7 @@ import java.util.HashMap;
 
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
 public class ControlPanel extends JPanel {
@@ -61,9 +62,21 @@ public class ControlPanel extends JPanel {
   }
   
   private void delete() {
-    if (!this.parentWindow.listPanel.accountList.isSelectionEmpty()) {
-      char[][] passwords = new PasswordEntryWindow("Enter the file passwords to confirm deletion.", 2).getPasswords();
+    if (this.parentWindow.listPanel.accountList.isSelectionEmpty()) {
+      return;
     }
+    if (this.parentWindow.encryptedBuffer != null) {
+      char[][] passwords = new PasswordEntryWindow("Enter the file passwords to confirm deletion.", 2).getPasswords();
+      if (!this.parentWindow.encryptedBuffer.validatePassword(passwords)) {
+        JOptionPane.showMessageDialog(this.parentWindow.mainFrame,
+            "One or more of the passwords was incorrect.",
+            "Incorrect Password",
+            JOptionPane.ERROR_MESSAGE);
+        return;
+      }
+    }
+    this.parentWindow.recordMap.remove(this.parentWindow.listPanel.accountList.getSelectedValue());
+    this.parentWindow.listPanel.updateAccountList();
   }
   
   private void modify() {
