@@ -1,15 +1,46 @@
 apply plugin: 'java'
 
 sourceSets {
-    main {
-        java {
-            srcDirs = ['src']
-        }
+  main {
+    java {
+      srcDirs = ['src']
     }
+  }
 }
 
-tasks.register("hello") {
-    doLast {
-        println 'Hello, World!'
-    }
+task createDirectories {
+  doLast {
+    mkdir "build"
+    mkdir "dist"
+    mkdir "lib/passwordio"
+  }
+}
+
+configure(createDirectories) {   
+  group = 'Intermediate'
+  description = 'Create required directories that do not exist in the git repo.'
+}
+
+task compilePasswordio(type: JavaCompile, dependsOn: createDirectories) {
+  source = fileTree(dir: 'src/passwordio', include: '*.java')
+  classpath = files('.')
+  destinationDirectory = file('build')
+  sourceCompatibility = '1.8'
+  targetCompatibility = '1.8'
+}
+
+configure(compilePasswordio) {
+  group = 'Intermediate'
+  description = 'Compile passwordio package.'
+}
+
+task jarPasswordio(type: Jar, dependsOn: compilePasswordio) {
+  archiveBaseName = 'passwordio'
+  destinationDirectory = file('lib/passwordio')
+  from ('build/passwordio')
+}
+
+configure(jarPasswordio) {
+  group = 'Intermediate'
+  description = 'JAR the passwordio package.'
 }
