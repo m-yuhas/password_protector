@@ -5,8 +5,10 @@ sourceSets {
     java {
       srcDirs = ['src']
     }
-  }
+  } 
 }
+
+//sourceSets.main.compileClasspath += files('build')
 
 task createDirectories {
   doLast {
@@ -34,13 +36,30 @@ configure(compilePasswordio) {
   description = 'Compile passwordio package.'
 }
 
-task jarPasswordio(type: Jar, dependsOn: compilePasswordio) {
-  archiveBaseName = 'passwordio'
-  destinationDirectory = file('lib/passwordio')
-  from ('build/passwordio')
+task compileGui(type: JavaCompile, dependsOn: compilePasswordio) {
+  source = fileTree(dir: 'src/gui', include: '*.java')
+  classpath = files('build')
+  destinationDirectory = file('build')
+  options.compilerArgs << '-Xlint'
+  sourceCompatibility = '1.8'
+  targetCompatibility = '1.8'
 }
 
-configure(jarPasswordio) {
+configure(compileGui) {
   group = 'Intermediate'
-  description = 'JAR the passwordio package.'
+  description = 'Compile gui package.'
+}
+
+task jarGui(type: Jar, dependsOn: compileGui) {
+  manifest {
+    attributes 'Main-Class': 'gui.PasswordProtector'
+  }
+  archiveBaseName = 'PasswordProtector'
+  destinationDirectory = file('dist')
+  from ('build')
+}
+
+configure(jarGui) {
+  group = 'Final'
+  description = 'Build gui for distribution'
 }
