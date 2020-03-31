@@ -1,5 +1,20 @@
 apply plugin: 'java'
 
+repositories {
+  jcenter()
+  mavenCentral()
+}
+
+configurations {
+  toCopy
+}
+
+dependencies {
+  //classpath group: 'commons-cli', name: 'commons-cli', version: '1.4'
+  toCopy 'commons-cli:commons-cli:1.4'
+  testCompile 'junit:junit:4.12'
+}
+
 sourceSets {
   main {
     java {
@@ -8,14 +23,17 @@ sourceSets {
   } 
 }
 
-//sourceSets.main.compileClasspath += files('build')
-
 task createDirectories {
   doLast {
     mkdir "build"
     mkdir "dist"
     mkdir "lib/passwordio"
   }
+}
+
+task downloadDependencies(type: Copy) {
+    from configurations.toCopy 
+    into 'lib'
 }
 
 configure(createDirectories) {   
@@ -27,6 +45,7 @@ task compilePasswordio(type: JavaCompile, dependsOn: createDirectories) {
   source = fileTree(dir: 'src/passwordio', include: '*.java')
   classpath = files('.')
   destinationDirectory = file('build')
+  options.compilerArgs << '-Xlint'
   sourceCompatibility = '1.8'
   targetCompatibility = '1.8'
 }
@@ -61,5 +80,33 @@ task jarGui(type: Jar, dependsOn: compileGui) {
 
 configure(jarGui) {
   group = 'Final'
-  description = 'Build gui for distribution'
+  description = 'Build gui for distribution.'
+}
+
+task compileCli(type: JavaCompile, dependsOn: compilePasswordio) {
+  source = fileTree(dir: 'src/cli', include: '*.java')
+  classpath = files('build')
+  destinationDirectory = file('build')
+  options.compilerArgs << '-Xlint'
+  sourceCompatibility = '1.8'
+  targetCompatibility = '1.8'
+}
+
+configure(compileCli) {
+  group = 'Intermediate'
+  description = 'Compile cli package.'
+}
+
+task jarCli(type: Jar, dependsOn: compileCli) {
+  manifest {
+    attributes 'Main-Class': 'cli.PasswordProtectorCli'
+  }
+  archiveBaseName = 'PasswordProtectorCli'
+  destinationDirectory = file('dist')
+  from ('build')
+}
+
+configure(jarCli) {
+  group = 'Final'
+  description = 'Build cli for distribution.'
 }
