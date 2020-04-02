@@ -8,14 +8,8 @@ import java.io.InputStreamReader;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
-import java.util.Map.Entry;
 
-import javax.swing.JCheckBox;
-import javax.swing.JOptionPane;
-
-import gui.PasswordEntryWindow;
 import passwordio.DecryptionException;
 import passwordio.EncryptedBuffer;
 import passwordio.EncryptionException;

@@ -6,13 +6,8 @@ import java.io.Console;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
+import java.util.HashMap;
+import java.util.Map;
 
 import passwordio.DecryptionException;
 import passwordio.EncryptedBuffer;
@@ -28,33 +23,30 @@ public class PasswordProtectorCli {
    * @param args
    */
   public static void main(String[] args) {
-    Options options = new Options();
-    options.addOption("e", "encrypt", false, "Encrypt a file.");
-    options.addOption("d", "decrypt", false, "Decrypt a file.");
-    options.addOption("p", "password_protector", true, "Open a password storage file or create a new one.");
-    options.addOption("i", "input_file", true, "Input file for encrypt and decrypt modes.");
-    options.addOption("o", "output_file", true, "Output file for encrypt and decrypt modes.");
-    CommandLineParser parser = new DefaultParser();
-    CommandLine parsedArgs;
+    ArgumentParser argumentParser = new ArgumentParser("usage: java -jar PasswordProtectorCli.jar");
+    argumentParser.addArgument("e", "encrypt", false, "Encrypt a file.");
+    argumentParser.addArgument("d", "decrypt", false, "Decrypt a file.");
+    argumentParser.addArgument("p", "password_protector", true, "Open a password storage file or create a new one.");
+    argumentParser.addArgument("i", "input_file", true, "Input file for encrypt and decrypt modes.");
+    argumentParser.addArgument("o", "output_file", true, "Output file for encrypt and decrypt modes.");
+    Map<String, String> parsedArgs = new HashMap<String, String>();
     try {
-      parsedArgs = parser.parse(options, args);
-    } catch (ParseException e) {
-      HelpFormatter formatter = new HelpFormatter();
-      formatter.printHelp("password_protector", options);
+      parsedArgs = argumentParser.parseArgs(args);
+    } catch (cli.ParseException e) {
+      argumentParser.printHelp();
       return;
     }
-    if (parsedArgs.hasOption("p")) {
-      PasswordProtector passwordProtector = new PasswordProtector(new File(parsedArgs.getOptionValue("p")));
+    if (parsedArgs.containsKey("p")) {
+      PasswordProtector passwordProtector = new PasswordProtector(new File(parsedArgs.get("p")));
       passwordProtector.mainLoop();
-    } else if (parsedArgs.hasOption("i") && parsedArgs.hasOption("o")) {
-      if (parsedArgs.hasOption("e") && !parsedArgs.hasOption("d")) {
-        encryptFile(new File(parsedArgs.getOptionValue("i")), new File(parsedArgs.getOptionValue("o")));
-      } else if (parsedArgs.hasOption("d") && !parsedArgs.hasOption("d")) {
-        decryptFile(new File(parsedArgs.getOptionValue("i")), new File(parsedArgs.getOptionValue("o")));
+    } else if (parsedArgs.containsKey("i") && parsedArgs.containsKey("o")) {
+      if (parsedArgs.containsKey("e") && !parsedArgs.containsKey("d")) {
+        encryptFile(new File(parsedArgs.get("i")), new File(parsedArgs.get("o")));
+      } else if (parsedArgs.containsKey("d") && !parsedArgs.containsKey("d")) {
+        decryptFile(new File(parsedArgs.get("i")), new File(parsedArgs.get("o")));
       }
     } else {
-      HelpFormatter formatter = new HelpFormatter();
-      formatter.printHelp("password_protector", options);
+      argumentParser.printHelp();
     }
   }
   
@@ -112,7 +104,7 @@ public class PasswordProtectorCli {
       return;
     }
     try {
-      Byte[] outputBytesObject = (Byte[]) buffer.decrypt(password);
+      Byte[] outputBytesObject = buffer.decrypt(password);
       byte[] outputBytes = new byte[outputBytesObject.length];
       int i = 0;
       for (Byte b: outputBytesObject) {

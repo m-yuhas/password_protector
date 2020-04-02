@@ -10,8 +10,6 @@ configurations {
 }
 
 dependencies {
-  //classpath group: 'commons-cli', name: 'commons-cli', version: '1.4'
-  toCopy 'commons-cli:commons-cli:1.4'
   testCompile 'junit:junit:4.12'
 }
 
@@ -27,13 +25,7 @@ task createDirectories {
   doLast {
     mkdir "build"
     mkdir "dist"
-    mkdir "lib/passwordio"
   }
-}
-
-task downloadDependencies(type: Copy) {
-    from configurations.toCopy 
-    into 'lib'
 }
 
 configure(createDirectories) {   
@@ -75,7 +67,8 @@ task jarGui(type: Jar, dependsOn: compileGui) {
   }
   archiveBaseName = 'PasswordProtector'
   destinationDirectory = file('dist')
-  from ('build')
+  from fileTree(dir: 'build', include: 'passwordio/*')
+  from fileTree(dir: 'build', include: 'gui/*')
 }
 
 configure(jarGui) {
@@ -83,7 +76,8 @@ configure(jarGui) {
   description = 'Build gui for distribution.'
 }
 
-task compileCli(type: JavaCompile, dependsOn: compilePasswordio) {
+task compileCli(type: JavaCompile) {
+  dependsOn 'compilePasswordio'
   source = fileTree(dir: 'src/cli', include: '*.java')
   classpath = files('build')
   destinationDirectory = file('build')
@@ -103,7 +97,8 @@ task jarCli(type: Jar, dependsOn: compileCli) {
   }
   archiveBaseName = 'PasswordProtectorCli'
   destinationDirectory = file('dist')
-  from ('build')
+  from fileTree(dir: 'build', include: 'passwordio/*')
+  from fileTree(dir: 'build', include: 'cli/*')
 }
 
 configure(jarCli) {

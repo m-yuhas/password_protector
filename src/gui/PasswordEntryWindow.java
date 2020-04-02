@@ -24,11 +24,7 @@ public class PasswordEntryWindow extends JDialog {
   private JButton submitButton;
   private JPanel mainPanel;
   private JLabel message;
-  private JLabel password1Label;
-  private JLabel password2Label;
   private JLabel[] passwordLabels;
-  private JPasswordField password1Field;
-  private JPasswordField password2Field;
   private JPasswordField[] passwordFields;
 
   public PasswordEntryWindow(String message, int numberOfPasswords) {

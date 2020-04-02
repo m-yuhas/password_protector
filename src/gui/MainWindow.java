@@ -366,7 +366,7 @@ public class MainWindow {
       return;
     }
     try {
-      Byte[] outputBytesObject = (Byte[]) buffer.decrypt(passwords);
+      Byte[] outputBytesObject = buffer.decrypt(passwords);
       byte[] outputBytes = new byte[outputBytesObject.length];
       int i = 0;
       for (Byte b: outputBytesObject) {

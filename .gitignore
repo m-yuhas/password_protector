@@ -8,3 +8,4 @@ lib
 
 **/*.class
 **/*.jar
+/bin/
