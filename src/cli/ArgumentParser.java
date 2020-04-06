@@ -20,37 +20,33 @@ public class ArgumentParser {
   }
   
   public Map<String, String> parseArgs(String[] args) throws ParseException {
-    for (String s: args) {
-      System.out.println(s);
-    }
     parsedArgs = new HashMap<String, String>();
     int state = 0;
     String next = "";
     for (String arg: args) {
       if (state == 0) {
+        boolean validArg = false;
         for (Argument expected: this.arguments) {
           if (arg.equals("-" + expected.shortName) || arg.equals("--" + expected.longName)) {
+            validArg = true;
             parsedArgs.put(expected.shortName, "");
             if (expected.argFollows) { 
               state = 1;
               next = expected.shortName;
-              break;
             }
+            break;
           }
         }
-        if (state == 0) {
-          System.out.println("Here");
+        if (!validArg) {
           throw new ParseException("Unexpected value");
         }
       } else if (state == 1) {
         if (arg.startsWith("-") || arg.startsWith("--")) {
-          System.out.println("HERE");
           throw new ParseException("Argument requires a value");
         }
         parsedArgs.put(next, arg);
         state = 0;
       } else {
-        System.out.println("HeRe");
         throw new ParseException("Undefined state");
       }
     }
@@ -62,12 +58,17 @@ public class ArgumentParser {
   
   public void printHelp() {
     System.out.println(this.description);
+    int maxLength = 0;
     for (Argument arg: this.arguments) {
-      System.out.print("  -" + arg.shortName + ",--" + arg.longName + " ");
+      maxLength = Math.max(maxLength, new String(arg.shortName + arg.longName + "  -,-- <arg> ").length());
+    }
+    for (Argument arg: this.arguments) {
+      String line = new String("  -" + arg.shortName + ",--" + arg.longName + " ");
       if (arg.argFollows) {
-        System.out.print("<arg>");
+        line = line.concat("<arg>");
       }
-      System.out.print("\t\t\t" + arg.help + "\n");
+      line = line.concat(new String(new char[maxLength - line.length()]).replace('\0', ' '));
+      System.out.println(line + arg.help);
     }
   }
 

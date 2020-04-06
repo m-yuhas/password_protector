@@ -1,24 +1,11 @@
 apply plugin: 'java'
 
-repositories {
-  jcenter()
-  mavenCentral()
-}
-
-configurations {
-  toCopy
-}
-
-dependencies {
-  testCompile 'junit:junit:4.12'
-}
-
 sourceSets {
   main {
     java {
       srcDirs = ['src']
     }
-  } 
+  }
 }
 
 task createDirectories {
@@ -33,9 +20,10 @@ configure(createDirectories) {
   description = 'Create required directories that do not exist in the git repo.'
 }
 
-task compilePasswordio(type: JavaCompile, dependsOn: createDirectories) {
+task compilePasswordio(type: JavaCompile) {
+  dependsOn: 'createDirectories'
   source = fileTree(dir: 'src/passwordio', include: '*.java')
-  classpath = files('.')
+  classpath = files('build')
   destinationDirectory = file('build')
   options.compilerArgs << '-Xlint'
   sourceCompatibility = '1.8'
@@ -47,7 +35,8 @@ configure(compilePasswordio) {
   description = 'Compile passwordio package.'
 }
 
-task compileGui(type: JavaCompile, dependsOn: compilePasswordio) {
+task compileGui(type: JavaCompile) {
+  dependsOn: 'compilePasswordio'
   source = fileTree(dir: 'src/gui', include: '*.java')
   classpath = files('build')
   destinationDirectory = file('build')
@@ -61,7 +50,8 @@ configure(compileGui) {
   description = 'Compile gui package.'
 }
 
-task jarGui(type: Jar, dependsOn: compileGui) {
+task jarGui(type: Jar) {
+  dependsOn: 'compileGui'
   manifest {
     attributes 'Main-Class': 'gui.PasswordProtector'
   }
@@ -91,7 +81,8 @@ configure(compileCli) {
   description = 'Compile cli package.'
 }
 
-task jarCli(type: Jar, dependsOn: compileCli) {
+task jarCli(type: Jar) {
+  dependsOn: 'compileCli'
   manifest {
     attributes 'Main-Class': 'cli.PasswordProtectorCli'
   }
