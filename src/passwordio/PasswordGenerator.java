@@ -4,7 +4,8 @@ import java.security.SecureRandom;
 import java.util.ArrayList;
 
 /**
- * This class generates passwords based on a secure pseudorandom seed and a set of allowable characters.
+ * This class generates passwords based on a secure pseudorandom seed and a set of allowable
+ * characters.
  */
 public class PasswordGenerator {
 
@@ -17,24 +18,24 @@ public class PasswordGenerator {
    * ASCII lower case characters a-z
    */
   public static final char[] LOWER_CASE_LETTERS = {
-      'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w',
-      'x', 'y', 'z'
+      'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's',
+      't', 'u', 'v', 'w', 'x', 'y', 'z'
   };
 
   /**
    * ASCII upper case characters A-Z
    */
   public static final char[] UPPER_CASE_LETTERS = {
-      'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W',
-      'X', 'Y', 'Z'
+      'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S',
+      'T', 'U', 'V', 'W', 'X', 'Y', 'Z'
   };
 
   /**
    * ASCII characters that can be typed on a US keyboard excluding a-z, A-Z, and 0-9
    */
   public static final char[] SYMBOLS = {
-      '~', '`', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '-', '+', '=', '{', '}', '[', ']', '|', '\\',
-      ':', ';', '"', '\'', '<', '>', ',', '.', '?', '/'
+      '~', '`', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '-', '+', '=', '{', '}', '[',
+      ']', '|', '\\', ':', ';', '"', '\'', '<', '>', ',', '.', '?', '/'
   };
 
   private SecureRandom randomNumberGenerator;
@@ -43,8 +44,8 @@ public class PasswordGenerator {
   /**
    * Constructs an instance of PasswordGenerator.
    * 
-   * @param allowableCharacters is an array of character arrays that represent all the valid characters that can appear
-   *        in a generated password.
+   * @param allowableCharacters is an array of character arrays that represent all the valid
+   *        characters that can appear in a generated password.
    */
   public PasswordGenerator(char[] ... allowableCharacters) {
     this.randomNumberGenerator = new SecureRandom();
@@ -65,7 +66,8 @@ public class PasswordGenerator {
   public char[] generatePassword(int length) {
     char[] password = new char[length];
     for (int i = 0; i < password.length; i++) {
-      password[i] = this.allowableCharacters.get(this.randomNumberGenerator.nextInt(this.allowableCharacters.size()));
+      int randomIndex = this.randomNumberGenerator.nextInt(this.allowableCharacters.size());
+      password[i] = this.allowableCharacters.get(randomIndex);
     }
     return password;
   }

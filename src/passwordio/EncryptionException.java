@@ -1,7 +1,8 @@
 package passwordio;
 
 /**
- * This class is an exception that can be thrown by EncryptedBuffer when an error occurs during encryption.
+ * This class is an exception that can be thrown by EncryptedBuffer when an error occurs during
+ * encryption.
  */
 public class EncryptionException extends Exception {
 
