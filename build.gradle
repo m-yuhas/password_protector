@@ -21,7 +21,7 @@ configure(createDirectories) {
 }
 
 task compilePasswordio(type: JavaCompile) {
-  dependsOn: 'createDirectories'
+  dependsOn 'createDirectories'
   source = fileTree(dir: 'src/passwordio', include: '*.java')
   classpath = files('build')
   destinationDirectory = file('build')
@@ -36,7 +36,7 @@ configure(compilePasswordio) {
 }
 
 task compileGui(type: JavaCompile) {
-  dependsOn: 'compilePasswordio'
+  dependsOn 'compilePasswordio'
   source = fileTree(dir: 'src/gui', include: '*.java')
   classpath = files('build')
   destinationDirectory = file('build')
@@ -51,7 +51,7 @@ configure(compileGui) {
 }
 
 task jarGui(type: Jar) {
-  dependsOn: 'compileGui'
+  dependsOn 'compileGui'
   manifest {
     attributes 'Main-Class': 'gui.PasswordProtector'
   }
@@ -82,7 +82,7 @@ configure(compileCli) {
 }
 
 task jarCli(type: Jar) {
-  dependsOn: 'compileCli'
+  dependsOn 'compileCli'
   manifest {
     attributes 'Main-Class': 'cli.PasswordProtectorCli'
   }
@@ -90,6 +90,7 @@ task jarCli(type: Jar) {
   destinationDirectory = file('dist')
   from fileTree(dir: 'build', include: 'passwordio/*')
   from fileTree(dir: 'build', include: 'cli/*')
+  from fileTree(dir: 'src', include: 'cli/*.properties')
 }
 
 configure(jarCli) {

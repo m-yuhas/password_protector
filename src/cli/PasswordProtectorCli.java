@@ -7,7 +7,10 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
+import java.util.MissingResourceException;
+import java.util.ResourceBundle;
 
 import passwordio.DecryptionException;
 import passwordio.EncryptedBuffer;
@@ -23,7 +26,8 @@ public class PasswordProtectorCli {
    * @param args
    */
   public static void main(String[] args) {
-    ArgumentParser argumentParser = new ArgumentParser("usage: java -jar PasswordProtectorCli.jar");
+    ResourceBundle messages = PasswordProtectorCli.loadResources();
+    ArgumentParser argumentParser = new ArgumentParser(messages.getString("usage"));
     argumentParser.addArgument("e", "encrypt", false, "Encrypt a file.");
     argumentParser.addArgument("d", "decrypt", false, "Decrypt a file.");
     argumentParser.addArgument("p", "password_protector", true, "Open a password storage file or create a new one.");
@@ -117,6 +121,17 @@ public class PasswordProtectorCli {
     } catch (IOException e) {
       System.out.println("IOException occurred while attempting to write the new file.");
       return;
+    } catch (ClassNotFoundException e) {
+      System.out.println("Should be impossible");
+      e.printStackTrace();
+    }
+  }
+  
+  private static ResourceBundle loadResources() {
+    try {
+      return ResourceBundle.getBundle("cli.StringsBundle", Locale.getDefault());
+    } catch (MissingResourceException e) {
+      return ResourceBundle.getBundle("cli.STringsBundle", new Locale("en", "US"));
     }
   }
 

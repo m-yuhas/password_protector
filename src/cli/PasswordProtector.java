@@ -40,6 +40,9 @@ public class PasswordProtector {
       } catch (IOException e) {
         System.out.println("An error occurred while reading from file.");
         System.exit(0);
+      } catch (ClassNotFoundException e) {
+        System.out.println("Should be impossible to get here.");
+        e.printStackTrace();
       }
     } else {
       this.recordMap = new HashMap<String, Map<String, String>>();
@@ -175,9 +178,14 @@ public class PasswordProtector {
       }
       char[] passwordOne = console.readPassword("Enter password 1:");
       char[] passwordTwo = console.readPassword("Enter password 2:");
-      if (!this.encryptedBuffer.validatePassword(passwordOne, passwordTwo)) {
-        System.out.println("One or more of the passwords is incorrect.");
-        return;
+      try {
+        if (!this.encryptedBuffer.validatePassword(passwordOne, passwordTwo)) {
+          System.out.println("One or more of the passwords is incorrect.");
+          return;
+        }
+      } catch (DecryptionException e) {
+        System.out.println("Corrupt file");
+        e.printStackTrace();
       }
     }
     this.recordMap.remove(recordName);
@@ -210,7 +218,7 @@ public class PasswordProtector {
           return;
         }
         this.encryptedBuffer.updateContents(this.recordMap, passwordOne, passwordTwo);
-      } catch (EncryptionException e) {
+      } catch (EncryptionException | DecryptionException e) {
         System.out.println("An error occurred during encryption.  Please try again");
         return;
       }
@@ -249,9 +257,14 @@ public class PasswordProtector {
     }
     char[] oldPasswordOne = console.readPassword("Enter current password 1:");
     char[] oldPasswordTwo = console.readPassword("Enter current password 2:");
-    if (!this.encryptedBuffer.validatePassword(oldPasswordOne, oldPasswordTwo)) {
-      System.out.println("One or more of the passwords is incorrect.");
-      return;
+    try {
+      if (!this.encryptedBuffer.validatePassword(oldPasswordOne, oldPasswordTwo)) {
+        System.out.println("One or more of the passwords is incorrect.");
+        return;
+      }
+    } catch (DecryptionException e1) {
+      System.out.println("Corrupt File?");
+      e1.printStackTrace();
     }
     char[] newPasswordOne = console.readPassword("Enter new password 1:");
     char[] newPasswordTwo = console.readPassword("Enter new password 2:");
