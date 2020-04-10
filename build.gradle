@@ -59,6 +59,7 @@ task jarGui(type: Jar) {
   destinationDirectory = file('dist')
   from fileTree(dir: 'build', include: 'passwordio/*')
   from fileTree(dir: 'build', include: 'gui/*')
+  from fileTrue(dir: 'resources', include: 'guil/*')
 }
 
 configure(jarGui) {
@@ -90,7 +91,7 @@ task jarCli(type: Jar) {
   destinationDirectory = file('dist')
   from fileTree(dir: 'build', include: 'passwordio/*')
   from fileTree(dir: 'build', include: 'cli/*')
-  from fileTree(dir: 'src', include: 'cli/*.properties')
+  from fileTree(dir: 'resources', include: 'cli/*')
 }
 
 configure(jarCli) {
