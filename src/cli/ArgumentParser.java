@@ -4,22 +4,55 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * The ArgumentParser class generates an object that parses the command-line arguments.
+ */
 public class ArgumentParser {
-  
+
   private String description;
   private ArrayList<Argument> arguments;
   private Map<String, String> parsedArgs;
 
+  /**
+   * Construct an instance of ArgumentParser.
+   * 
+   * @param description is a string that describes the program in which this object is being
+   *        constructed and will be printed as part of the help menu.
+   */
   public ArgumentParser(String description) {
     this.description = description;
     this.arguments = new ArrayList<Argument>();
   }
-  
+
+  /**
+   * Add a supported argument to this parser.
+   * 
+   * @param shortName is as string representing the short version of the argument name.  When the
+   *        command-line arguments are parsed, this object will check for a '-' followed by this
+   *        string.  Spaces are not allowed in this parameter.
+   * @param longName is a string representing the long version of the argument name.  When the
+   *        command-line arguments are parsed, this object will check for a '--' followed by this
+   *        string.  Spaces are not allowed in this parameter.
+   * @param argFollows is a boolean value that determines if the command-line argument following
+   *        this argument should be treated as a value for this argument or not.
+   * @param help is a string containing the description of this argument.
+   */
   public void addArgument(String shortName, String longName, boolean argFollows, String help) {
     this.arguments.add(new Argument(shortName, longName, argFollows, help));
   }
-  
+
+  /**
+   * Parse the command-line arguments.
+   * 
+   * @param args is an array of strings for each command-line argument provided to the JVM.
+   * @return a map whose keys are the parser's arguments' short names and whose values are the
+   *         values provided in the input command-line arguments.  If an argument does not take a
+   *         value (i.e. a flag), its presence in the map in indicates that it was provided.
+   * @throws ParseException if an invalid sequence of command-line arguments is provided or if an
+   *         unknown argument is provided.
+   */
   public Map<String, String> parseArgs(String[] args) throws ParseException {
+    //TODO: break each state into own function
     parsedArgs = new HashMap<String, String>();
     int state = 0;
     String next = "";
@@ -55,7 +88,10 @@ public class ArgumentParser {
     }
     return parsedArgs;
   }
-  
+
+  /**
+   * Print the help menu for this program.
+   */
   public void printHelp() {
     System.out.println(this.description);
     int maxLength = 0;

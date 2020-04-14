@@ -9,56 +9,55 @@ import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-
+import java.util.ResourceBundle;
 import passwordio.DecryptionException;
 import passwordio.EncryptedBuffer;
 import passwordio.EncryptionException;
 
+/**
+ * This class implements the password protector functionality for the CLI.
+ */
 public class PasswordProtector {
-  
+
   private boolean modified = false;
   private File file;
+  private ResourceBundle messages;
   private Map<String, Map<String, String>> recordMap;
   private EncryptedBuffer<Map<String, Map<String, String>>> encryptedBuffer;
-  
-  public PasswordProtector(File file) {
+
+  /**
+   * Construct an instance of PasswordProtector.
+   * 
+   * @param file is the file object from which to read and write passwords.  If it doesn't exist,
+   *        a new file will be created.
+   * @throws Exception  if an error occurs while trying to open the password file.
+   */
+  public PasswordProtector(File file, ResourceBundle messages) throws Exception {
     this.file = file;
+    this.messages = messages;
     if (this.file.isFile()) {
-      Console console = System.console();
-      if (console == null) {
-        System.out.println("Could not get console.  Please check system configuration.");
-        System.exit(0);
-      }
-      char[] passwordOne = console.readPassword("Enter password 1:");
-      char[] passwordTwo = console.readPassword("Enter password 2:");
-      try {
-        encryptedBuffer = new EncryptedBuffer<Map<String, Map<String, String>>>(file);
-        this.recordMap = encryptedBuffer.decrypt(passwordOne, passwordTwo);       
-      } catch (DecryptionException e) {
-        System.out.println("One or more of the passwords was incorrect.");
-        System.exit(0);
-      } catch (IOException e) {
-        System.out.println("An error occurred while reading from file.");
-        System.exit(0);
-      } catch (ClassNotFoundException e) {
-        System.out.println("Should be impossible to get here.");
-        e.printStackTrace();
-      }
+      this.open();
     } else {
       this.recordMap = new HashMap<String, Map<String, String>>();
     }
   }
-  
-  public void mainLoop() {
+
+  /**
+   * Run the password protector main loop.  This method will run until the user selects the exit
+   * option or the JVM is terminated by the OS.
+   * 
+   * @throws Exception if any error occurs getting input from the user.
+   */
+  public void mainLoop() throws Exception {
     while (true) {
-      System.out.println("Options: \n1. LIST accounts\n2. VIEW account\n3. ADD account\n4. DELETE account\n5. MODIFY account\n6. SAVE file\n7. CHANGE file password\n8. QUIT");
+      System.out.println(this.messages.getString("menu"));
       BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
       String selection;
       try {
         System.out.print(">>>");
         selection = reader.readLine();
       } catch (IOException e) {
-        System.out.println("Error occurred reading the input, please try again.");
+        System.out.println(this.messages.getString("consoleReadError"));
         continue;
       }
       String[] parsedSelection = selection.trim().split(" ", 2);
@@ -70,28 +69,28 @@ public class PasswordProtector {
           if (parsedSelection.length == 1) {
             this.view(parsedSelection[1].trim());
           } else {
-            System.out.println("Please enter an account name (e.g. 'VIEW Facebook')");
+            System.out.println(this.messages.getString("viewError"));
           }
           break;
         case "add":
           if (parsedSelection.length == 1) {
             this.add(parsedSelection[1].trim());
           } else {
-            System.out.println("Please enter an account name (e.g. 'ADD Facebook')");
+            System.out.println(this.messages.getString("addError"));
           }
           break;
         case "delete":
           if (parsedSelection.length == 1) {
             this.delete(parsedSelection[1].trim());
           } else {
-            System.out.println("Please enter an account name (e.g. 'DELETE Facebook')");
+            System.out.println(this.messages.getString("deleteError"));
           }
           break;
         case "modify":
           if (parsedSelection.length == 1) {
             this.modify(parsedSelection[1].trim());
           } else {
-            System.out.println("Please enter account name (e.g. 'MODIFY' Facebook')");
+            System.out.println(this.messages.getString("modifyError"));
           }
           break;
         case "save":
@@ -104,22 +103,30 @@ public class PasswordProtector {
           this.quit();
           break;
         default:
-          System.out.println("Sorry, I didn't understand.");
+          System.out.println(this.messages.getString("invalidInput"));
           break;
       }
     }
   }
 
+  /**
+   * List the stored accounts.
+   */
   private void list() {
     int count = 0;
     for (String account: this.recordMap.keySet()) {
       System.out.println(Integer.toString(++count) + ". " + account);
     }
     if (count == 0) {
-      System.out.println("No records available.  ADD some or try a different file.");
+      System.out.println(this.messages.getString("noRecords"));
     }
   }
 
+  /**
+   * View a specific account.
+   * 
+   * @param recordName is a string of the name of the account to view.
+   */
   private void view(String recordName) {
     if (this.recordMap.containsKey(recordName)) {
       Map<String, String> record = this.recordMap.get(recordName);
@@ -127,28 +134,33 @@ public class PasswordProtector {
         System.out.println(attribute + ": " + record.get(attribute));
       }
     } else {
-      System.out.println("Sorry, no record with that name could be found.");
+      System.out.println(this.messages.getString("recordNotFound"));
     }
   }
 
+  /**
+   * Add a new account.  If the account already exists it will be overwritten.
+   * 
+   * @param recordName is a string of the name of the account to add.
+   */
   private void add(String recordName) {
     String attribute = "";
     String value = "";
     BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
     Map<String, String> recordData = new HashMap<String, String>();
     while (true) {
-      System.out.println("Enter an account attribute (\"DONE\" to finalize this record):");
+      System.out.println(this.messages.getString("enterAttribute"));
       try {
         System.out.print(">");
         attribute = reader.readLine();
       } catch (IOException e) {
-        System.out.println("Error occurred reading the input, please try again.");
+        System.out.println(this.messages.getString("consoleReadError"));
         continue;
       }
       if (attribute.strip().toLowerCase().equals("done")) {
         break;
       }
-      System.out.println("Enter the corresponding value (\"GENERATE\" to generate a new password:");
+      System.out.println(this.messages.getString("enterValue"));
       try {
         System.out.print(">");
         value = reader.readLine();
@@ -156,7 +168,7 @@ public class PasswordProtector {
           value = this.generatePassword();
         }
       } catch (IOException e) {
-        System.out.println("Error occurred reading the input, please try again.");
+        System.out.println(this.messages.getString("consoleReadError"));
         continue;
       }
       recordData.put(attribute, value);
@@ -165,33 +177,38 @@ public class PasswordProtector {
     this.modified = true;
   }
 
-  private void delete(String recordName) {
+  /**
+   * Delete an account.
+   * 
+   * @param recordName is a string of the name of the account to delete.
+   * @throws Exception if any error occurs getting input from the user.
+   */
+  private void delete(String recordName) throws Exception {
     if (!this.recordMap.containsKey(recordName)) {
-      System.out.println("Sorry, no record with that name could be found.");
+      System.out.println(this.messages.getString("recordNotFound"));
       return;
     }
     if (this.encryptedBuffer != null) {
-      Console console = System.console();
-      if (console == null) {
-        System.out.println("Could not get console.  Please check system configuration.");
-        System.exit(0);
-      }
-      char[] passwordOne = console.readPassword("Enter password 1:");
-      char[] passwordTwo = console.readPassword("Enter password 2:");
+      char[][] passwords = this.getPasswords();
       try {
-        if (!this.encryptedBuffer.validatePassword(passwordOne, passwordTwo)) {
-          System.out.println("One or more of the passwords is incorrect.");
+        if (!this.encryptedBuffer.validatePassword(passwords)) {
+          System.out.println(this.messages.getString("incorrectPasswords"));
           return;
         }
       } catch (DecryptionException e) {
-        System.out.println("Corrupt file");
-        e.printStackTrace();
+        System.out.println(this.messages.getString("corruptFileError"));
+        return;
       }
     }
     this.recordMap.remove(recordName);
     this.modified = true;
   }
 
+  /**
+   * Edit an account.
+   * 
+   * @param recordName is a string of the name of the account to edit.
+   */
   private void modify(String recordName) {
     
   }
@@ -339,6 +356,36 @@ public class PasswordProtector {
       e.printStackTrace();
     }
     return new String(new passwordio.PasswordGenerator(chosenCharacters).generatePassword(length));
+  }
+
+  private void open() throws Exception {
+    char[][] passwords = this.getPasswords();
+    try {
+      encryptedBuffer = new EncryptedBuffer<Map<String, Map<String, String>>>(file);
+      this.recordMap = encryptedBuffer.decrypt(passwords);       
+    } catch (DecryptionException e) {
+      System.out.println(this.messages.getString("incorrectPasswords"));
+      throw new Exception("One or more passwords was incorrect.");
+    } catch (IOException e) {
+      System.out.println(this.messages.getString("ioExceptionRead"));
+      throw new Exception("Error occurred while reading the file");
+    } catch (ClassNotFoundException e) {
+      System.out.println(this.messages.getString("classNotFoundException"));
+      e.printStackTrace();
+      throw new Exception("Invalid state.");
+    }
+  }
+
+  private char[][] getPasswords() throws Exception {
+    Console console = System.console();
+    if (console == null) {
+      System.out.println(this.messages.getString("consoleError"));
+      throw new Exception("Could not get console.");
+    }
+    char[][] passwords = new char[2][];
+    passwords[0] = console.readPassword(this.messages.getString("readPassword1"));
+    passwords[1] = console.readPassword(this.messages.getString("readPassword2"));
+    return passwords;
   }
 
 }

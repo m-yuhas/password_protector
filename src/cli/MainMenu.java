@@ -38,8 +38,13 @@ public class MainMenu {
       return;
     }
     if (parsedArgs.containsKey("p")) {
-      PasswordProtector passwordProtector = new PasswordProtector(new File(parsedArgs.get("p")));
-      passwordProtector.mainLoop();
+      File passwordFile = new File(parsedArgs.get("p"));
+      try {
+        PasswordProtector passwordProtector = new PasswordProtector(passwordFile, messages);
+        passwordProtector.mainLoop();
+      } catch (Exception e) {
+        return;
+      }
     } else if (parsedArgs.containsKey("i") && parsedArgs.containsKey("o")) {
       if (parsedArgs.containsKey("e") && !parsedArgs.containsKey("d")) {
         this.encryptFile(new File(parsedArgs.get("i")), new File(parsedArgs.get("o")));
@@ -86,45 +91,50 @@ public class MainMenu {
       return;
     }
   }
-  
+
+  /**
+   * Decrypt a file.
+   * 
+   * @param inputFile is the encrypted file serving as input to this process.
+   * @param outputFile is the unencrypted output file that is the output of this process.
+   */
   private void decryptFile(File inputFile, File outputFile) {
     if (!inputFile.isFile()) {
-      System.out.println("Input file must exist and be a regular file");
+      System.out.println(this.messages.getString("badFileError"));
       return;
     }
     Console console = System.console();
     if (console == null) {
-      System.out.println("Could not get console.  Please check system configuration.");
+      System.out.println(this.messages.getString("consoleError"));
       System.exit(0);
     }
-    char[] password = console.readPassword("Enter the password to decrypt this file:");
-    EncryptedBuffer<Byte[]> buffer;
+    char[] password = console.readPassword(this.messages.getString("readPasswordDecrypt"));
+    EncryptedBuffer<byte[]> buffer;
     try {
-      buffer = new EncryptedBuffer<Byte[]>(inputFile);
-    } catch (IOException e1) {
-      System.out.println("IOException occurred while attempting to open the file.");
+      buffer = new EncryptedBuffer<byte[]>(inputFile);
+    } catch (IOException e) {
+      System.out.println(this.messages.getString("ioExceptionRead"));
       return;
     }
     try {
-      Byte[] outputBytesObject = buffer.decrypt(password);
-      byte[] outputBytes = new byte[outputBytesObject.length];
-      int i = 0;
-      for (Byte b: outputBytesObject) {
-        outputBytes[i++] = b.byteValue();
-      }
-      Files.write(outputFile.toPath(), outputBytes);
+      Files.write(outputFile.toPath(), buffer.decrypt(password));
     } catch (DecryptionException e) {
-      System.out.println("Incorrect Password");
+      System.out.println(this.messages.getString("incorrectPassword"));
       return;
     } catch (IOException e) {
-      System.out.println("IOException occurred while attempting to write the new file.");
+      System.out.println(this.messages.getString("ioExceptionWrite"));
       return;
     } catch (ClassNotFoundException e) {
-      System.out.println("Should be impossible");
-      e.printStackTrace();
+      System.out.println(this.messages.getString("classNotFoundException"));
+      return;
     }
   }
-  
+
+  /**
+   * Setup the argument parser.
+   * 
+   * @return an ArgumentParser object ready to parse the command-line arguments for this program.
+   */
   private ArgumentParser setupArgumentParser() {
     ArgumentParser argumentParser = new ArgumentParser(this.messages.getString("usage"));
     argumentParser.addArgument(
@@ -154,4 +164,5 @@ public class MainMenu {
         this.messages.getString("outputFileHelp"));
     return argumentParser;
   }
+
 }
