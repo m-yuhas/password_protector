@@ -144,36 +144,11 @@ public class PasswordProtector {
    * @param recordName is a string of the name of the account to add.
    */
   private void add(String recordName) {
-    String attribute = "";
-    String value = "";
-    BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-    Map<String, String> recordData = new HashMap<String, String>();
-    while (true) {
-      System.out.println(this.messages.getString("enterAttribute"));
-      try {
-        System.out.print(">");
-        attribute = reader.readLine();
-      } catch (IOException e) {
-        System.out.println(this.messages.getString("consoleReadError"));
-        continue;
-      }
-      if (attribute.strip().toLowerCase().equals("done")) {
-        break;
-      }
-      System.out.println(this.messages.getString("enterValue"));
-      try {
-        System.out.print(">");
-        value = reader.readLine();
-        if (value.strip().toLowerCase().contentEquals("generate")) {
-          value = this.generatePassword();
-        }
-      } catch (IOException e) {
-        System.out.println(this.messages.getString("consoleReadError"));
-        continue;
-      }
-      recordData.put(attribute, value);
+    if (this.recordMap.containsKey(recordName)) {
+      System.out.println(this.messages.getString("recordExists"));
+      return;
     }
-    this.recordMap.put(recordName, recordData);
+    this.recordMap.put(recordName, this.addAttributes(new HashMap<String, String>()));
     this.modified = true;
   }
 
@@ -210,125 +185,155 @@ public class PasswordProtector {
    * @param recordName is a string of the name of the account to edit.
    */
   private void modify(String recordName) {
-    
+    if (!this.recordMap.containsKey(recordName)) {
+      System.out.println(this.messages.getString("recordNotFound"));
+      return;
+    }
+    this.recordMap.put(recordName, this.addAttributes(this.recordMap.get(recordName)));
+    this.modified = true;
   }
 
-  private void save() {
-    Console console = System.console();
-    if (console == null) {
-      System.out.println("Could not get console.  Please check system configuration.");
-      System.exit(0);
-    }
-    char[] passwordOne = console.readPassword("Enter password 1:");
-    char[] passwordTwo = console.readPassword("Enter password 2:");
+  /**
+   * Write changes to disk.
+   * 
+   * @throws Exception if an error occurs while reading input from the console.
+   */
+  private void save() throws Exception {
+    //TODO split this to make 20 lin/func rule.
+    char[][] passwords = this.getPasswords();
     if (this.encryptedBuffer == null) {
       try {
-        this.encryptedBuffer = new EncryptedBuffer<Map<String, Map<String, String>>>(this.recordMap, passwordOne, passwordTwo);
+        this.encryptedBuffer = new EncryptedBuffer<Map<String, Map<String, String>>>(
+            this.recordMap,
+            passwords);
       } catch (EncryptionException e) {
-        System.out.println("An error occurred during encryption.  Please try again");
+        System.out.println(this.messages.getString("encryptionException"));
         return;
       }
     } else {
       try {
-        if (!this.encryptedBuffer.validatePassword(passwordOne, passwordTwo)) {
-          System.out.println("One or more of the passwords is incorrect.");
+        if (!this.encryptedBuffer.validatePassword(passwords)) {
+          System.out.println(this.messages.getString("incorrectPasswords"));
           return;
         }
-        this.encryptedBuffer.updateContents(this.recordMap, passwordOne, passwordTwo);
+        this.encryptedBuffer.updateContents(this.recordMap, passwords);
       } catch (EncryptionException | DecryptionException e) {
-        System.out.println("An error occurred during encryption.  Please try again");
+        System.out.println(this.messages.getString("encryptionException"));
         return;
       }
     }
     try {
       this.encryptedBuffer.writeToFile(this.file);
       this.modified = false;
-      System.out.println("File written succesffully.");
+      System.out.println(this.messages.getString("saveSuccessful"));
     } catch (IOException e) {
-      System.out.println("An error occurred while writing to file.");
+      System.out.println(this.messages.getString("ioExceptionWrite"));
     }
   }
 
-  private void change() {    
+  /**
+   * Change the password that is used to protect this set of records.  Prompt the user first for
+   * their original password and then for their new password.
+   * 
+   * @throws Exception if an error occurs while reading input from the console.
+   */
+  private void change() throws Exception {
+    //TODO: Break into two functions
     if (this.encryptedBuffer == null) {
-      System.out.println("No passwords file is currently loaded.");
+      System.out.println(this.messages.getString("fileNotLoaded"));
       return;
     }
     if (this.modified) {
-      System.out.println("This list of records has been modified, would you like to save first? (Y/n):");
+      System.out.println(this.messages.getString("savePrompt"));
       BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
       try {
         if (reader.readLine().strip().startsWith("Y")) {
           this.save();
         }
       } catch (IOException e) {
-        System.out.println("Error occurred during reading input");
+        System.out.println(this.messages.getString("inputError"));
         e.printStackTrace();
         return;
       }
     }
-    Console console = System.console();
-    if (console == null) {
-      System.out.println("Could not get console.  Please check system configuration.");
-      System.exit(0);
-    }
-    char[] oldPasswordOne = console.readPassword("Enter current password 1:");
-    char[] oldPasswordTwo = console.readPassword("Enter current password 2:");
     try {
-      if (!this.encryptedBuffer.validatePassword(oldPasswordOne, oldPasswordTwo)) {
-        System.out.println("One or more of the passwords is incorrect.");
+      if (!this.encryptedBuffer.validatePassword(this.getPasswords())) {
+        System.out.println(this.messages.getString("incorrectPasswords"));
         return;
       }
     } catch (DecryptionException e1) {
-      System.out.println("Corrupt File?");
+      System.out.println(this.messages.getString("corruptFileError"));
       e1.printStackTrace();
     }
-    char[] newPasswordOne = console.readPassword("Enter new password 1:");
-    char[] newPasswordTwo = console.readPassword("Enter new password 2:");
     try {
-      this.encryptedBuffer = new EncryptedBuffer<Map<String, Map<String, String>>>(this.recordMap, newPasswordOne, newPasswordTwo);
+      this.encryptedBuffer = new EncryptedBuffer<Map<String, Map<String, String>>>(
+          this.recordMap,
+          this.getPasswords());
     } catch (EncryptionException e) {
-      System.out.println("Error setting new password:");
+      System.out.println(this.messages.getString("setPasswordError"));
       return;
     }
     try {
       this.encryptedBuffer.writeToFile(this.file);
     } catch (IOException e) {
-      System.out.println("Error occurred while writing to disk.");
+      System.out.println(this.messages.getString("ioExceptionWrite"));
       return;
     }
     this.modified = false;
-    System.out.println("File passwords modified successfully");
+    System.out.println(this.messages.getString("setPasswordSuccess"));
   }
 
-  private void quit() {
+  /**
+   * Exit this program.  Check if the user wants to save before quitting.
+   * 
+   * @throws Exception if an error occurs while getting input from the user.
+   */
+  private void quit() throws Exception {
     if (this.modified) {
-      System.out.println("This list of records has been modified, would you like to save first? (Y/n):");
+      System.out.println(this.messages.getString("savePrompt"));
       BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
       try {
         if (reader.readLine().strip().startsWith("Y")) {
           this.save();
         }
       } catch (IOException e) {
-        System.out.println("Error occurred during reading input");
+        System.out.println(this.messages.getString("inputError"));
         e.printStackTrace();
         return;
       }
     }
     System.exit(0);
   }
-  
+
+  /**
+   * Generate a pseudorandom password according the parameters entered by the user.  These include
+   * the allowed characters and the length of the password.
+   * 
+   * @return a string containing a pseudorandom password.
+   */
   private String generatePassword() {
+    //TODO: Split this up
     Map<String, char[]> characterChoices = Map.ofEntries(
-        new AbstractMap.SimpleEntry<String, char[]>("numbers", passwordio.PasswordGenerator.NUMBERS),
-        new AbstractMap.SimpleEntry<String, char[]>("lower case letters", passwordio.PasswordGenerator.LOWER_CASE_LETTERS),
-        new AbstractMap.SimpleEntry<String, char[]>("upper case letters", passwordio.PasswordGenerator.UPPER_CASE_LETTERS),
-        new AbstractMap.SimpleEntry<String, char[]>("symbols", passwordio.PasswordGenerator.SYMBOLS));
+        new AbstractMap.SimpleEntry<String, char[]>(
+            this.messages.getString("numbers"),
+            passwordio.PasswordGenerator.NUMBERS),
+        new AbstractMap.SimpleEntry<String, char[]>(
+            this.messages.getString("lowerCaseLetters"),
+            passwordio.PasswordGenerator.LOWER_CASE_LETTERS),
+        new AbstractMap.SimpleEntry<String, char[]>(
+            this.messages.getString("upperCaseLetters"),
+            passwordio.PasswordGenerator.UPPER_CASE_LETTERS),
+        new AbstractMap.SimpleEntry<String, char[]>(
+            this.messages.getString("symbols"),
+            passwordio.PasswordGenerator.SYMBOLS));
     ArrayList<Character> chosenCharactersObjects = new ArrayList<Character>();
     BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
     try {
       for (String choice: characterChoices.keySet()) {
-        System.out.println("Include " + choice + "? (Y/n):");
+        System.out.println(
+            this.messages.getString("includePart1") +
+            choice + 
+            this.messages.getString("includePart2"));
         if (reader.readLine().strip().startsWith("Y")) {
           for (char c: characterChoices.get(choice)) {
             chosenCharactersObjects.add(c);
@@ -336,28 +341,32 @@ public class PasswordProtector {
         }
       }
     } catch (IOException e) {
-      System.out.println("Error occurred during reading input");
-      e.printStackTrace();
+      System.out.println(this.messages.getString("inputError"));
       return "";
     }
     char[] chosenCharacters = new char[chosenCharactersObjects.size()];
     for (int i = 0; i < chosenCharacters.length; i++) {
       chosenCharacters[i] = chosenCharactersObjects.get(i);
     }
-    System.out.println("Enter the length of the password in characters:");
+    System.out.println(this.messages.getString("getLength"));
     int length = 0;
     try {
       length = Integer.parseInt(reader.readLine());
     } catch (NumberFormatException e) {
-      System.out.println("Entry was not a number.");
+      System.out.println(this.messages.getString("notANumber"));
       return "";
     } catch (IOException e) {
-      System.out.println("Error occurred during reading input");
-      e.printStackTrace();
+      System.out.println(this.messages.getString("inputError"));
+      return "";
     }
     return new String(new passwordio.PasswordGenerator(chosenCharacters).generatePassword(length));
   }
 
+  /**
+   * Open a passwords file.
+   * 
+   * @throws Exception if an error occurs while reading user input
+   */
   private void open() throws Exception {
     char[][] passwords = this.getPasswords();
     try {
@@ -376,6 +385,12 @@ public class PasswordProtector {
     }
   }
 
+  /**
+   * Get the passwords to decrypt a file from the user.
+   * 
+   * @return an array of character arrays containing the passwords that were entered.
+   * @throws Exception if an error occurs while getting user input.
+   */
   private char[][] getPasswords() throws Exception {
     Console console = System.console();
     if (console == null) {
@@ -386,6 +401,44 @@ public class PasswordProtector {
     passwords[0] = console.readPassword(this.messages.getString("readPassword1"));
     passwords[1] = console.readPassword(this.messages.getString("readPassword2"));
     return passwords;
+  }
+
+  /**
+   * Add attributes-value pairs to a map containing the details for a particular account record.
+   * 
+   * @param attributes is the existing map of attributes for an account.
+   * @return an updated map of attribute-value pairs for the account.
+   */
+  private Map<String, String> addAttributes(Map<String, String> attributes) {
+    while (true) {
+      System.out.println(this.messages.getString("enterAttribute"));
+      BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+      String attribute;
+      try {
+        System.out.print(">");
+        attribute = reader.readLine();
+      } catch (IOException e) {
+        System.out.println(this.messages.getString("consoleReadError"));
+        continue;
+      }
+      if (attribute.strip().toLowerCase().equals("done")) {
+        break;
+      }
+      System.out.println(this.messages.getString("enterValue"));
+      String value;
+      try {
+        System.out.print(">");
+        value = reader.readLine();
+        if (value.strip().toLowerCase().contentEquals("generate")) {
+          value = this.generatePassword();
+        }
+      } catch (IOException e) {
+        System.out.println(this.messages.getString("consoleReadError"));
+        continue;
+      }
+      attributes.put(attribute, value);
+    }
+    return attributes;
   }
 
 }
