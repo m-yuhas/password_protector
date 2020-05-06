@@ -66,28 +66,28 @@ public class PasswordProtector {
           this.list();
           break;
         case "view":
-          if (parsedSelection.length == 1) {
+          if (parsedSelection.length == 2) {
             this.view(parsedSelection[1].trim());
           } else {
             System.out.println(this.messages.getString("viewError"));
           }
           break;
         case "add":
-          if (parsedSelection.length == 1) {
+          if (parsedSelection.length == 2) {
             this.add(parsedSelection[1].trim());
           } else {
             System.out.println(this.messages.getString("addError"));
           }
           break;
         case "delete":
-          if (parsedSelection.length == 1) {
+          if (parsedSelection.length == 2) {
             this.delete(parsedSelection[1].trim());
           } else {
             System.out.println(this.messages.getString("deleteError"));
           }
           break;
         case "modify":
-          if (parsedSelection.length == 1) {
+          if (parsedSelection.length == 2) {
             this.modify(parsedSelection[1].trim());
           } else {
             System.out.println(this.messages.getString("modifyError"));
@@ -199,28 +199,22 @@ public class PasswordProtector {
    * @throws Exception if an error occurs while reading input from the console.
    */
   private void save() throws Exception {
-    //TODO split this to make 20 lin/func rule.
     char[][] passwords = this.getPasswords();
-    if (this.encryptedBuffer == null) {
-      try {
+    try {
+      if (this.encryptedBuffer == null) {
         this.encryptedBuffer = new EncryptedBuffer<Map<String, Map<String, String>>>(
             this.recordMap,
             passwords);
-      } catch (EncryptionException e) {
-        System.out.println(this.messages.getString("encryptionException"));
-        return;
-      }
-    } else {
-      try {
+      } else {
         if (!this.encryptedBuffer.validatePassword(passwords)) {
           System.out.println(this.messages.getString("incorrectPasswords"));
           return;
         }
         this.encryptedBuffer.updateContents(this.recordMap, passwords);
-      } catch (EncryptionException | DecryptionException e) {
-        System.out.println(this.messages.getString("encryptionException"));
-        return;
       }
+    } catch (EncryptionException | DecryptionException e) {
+      System.out.println(this.messages.getString("encryptionException"));
+      return;
     }
     try {
       this.encryptedBuffer.writeToFile(this.file);
@@ -238,7 +232,6 @@ public class PasswordProtector {
    * @throws Exception if an error occurs while reading input from the console.
    */
   private void change() throws Exception {
-    //TODO: Break into two functions
     if (this.encryptedBuffer == null) {
       System.out.println(this.messages.getString("fileNotLoaded"));
       return;
@@ -312,7 +305,6 @@ public class PasswordProtector {
    * @return a string containing a pseudorandom password.
    */
   private String generatePassword() {
-    //TODO: Split this up
     Map<String, char[]> characterChoices = Map.ofEntries(
         new AbstractMap.SimpleEntry<String, char[]>(
             this.messages.getString("numbers"),

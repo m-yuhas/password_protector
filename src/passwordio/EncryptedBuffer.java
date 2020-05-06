@@ -248,7 +248,6 @@ public class EncryptedBuffer<T> {
    * compatibility with previously encrypted text will break. The merged password should be unique
    * for each input.
    * 
-   * TODO: Test this
    * @param passwords is an array of character arrays for each of the passwords entered by the
    *        users.
    * @return an array of characters for the merged Password.

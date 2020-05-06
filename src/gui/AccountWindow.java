@@ -8,7 +8,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Vector;
 import java.util.Map.Entry;
-
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -16,26 +15,41 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JTable;
 import javax.swing.JTextField;
-import javax.swing.event.ChangeEvent;
 import javax.swing.table.DefaultTableModel;
 
+/**
+ * Window containing a viewable list of attributes for an account.
+ */
 public class AccountWindow {
   
   private MainWindow parentWindow;
-  private JFrame mainFrame;
-  private JPanel mainPanel;
-  //private JTable table;
+  private GrowableTable table;
   private JButton saveButton;
   private JButton quitButton;
+  private JFrame mainFrame;
   private JLabel nameLabel;
-  private GrowableTable table;
+  private JPanel mainPanel;
   private JTextField nameField;
-  private boolean existingRecord = false;
   private String originalName;
+  private boolean existingRecord = false;
 
-  public AccountWindow(MainWindow parentWindow, Map<String, String> attributes, String name, boolean isEditable) {
+  /**
+   * Construct an instance of AccountWindow and display it.
+   * 
+   * @param parentWindow is a MainWindow object: the object that spawned this window.
+   * @param attributes is a map of strings containing the attributes and values for this account.
+   * @param name is a string representing the account name.  If the name is an empty string, this
+   *        window represents an new, empty account.
+   * @param isEditable is a boolean flag that determines if this account window is read only (only
+   *        displays data) or is editable (user is able to add and modify attributes and their
+   *        values).
+   */
+  public AccountWindow(
+      MainWindow parentWindow,
+      Map<String, String> attributes,
+      String name,
+      boolean isEditable) {
     if (name.length() != 0) {
       this.existingRecord = true;
     }
@@ -43,27 +57,7 @@ public class AccountWindow {
     this.parentWindow = parentWindow;
     this.mainFrame = new JFrame();
     this.mainPanel = new JPanel();
-    DefaultTableModel m = new DefaultTableModel() {
-      public boolean isCellEditable(int row, int column) {
-        return isEditable;
-      }
-    };
-    m.addColumn("Attribute");
-    m.addColumn("Value");
-    if (attributes.size() == 0) {
-      m.addRow(new String[] {"", ""});
-    } else {
-      Iterator<Entry<String, String>> iterator = attributes.entrySet().iterator();
-      while (iterator.hasNext()) {
-        Entry<String, String> entry = iterator.next();
-        Vector<String> v = new Vector<String>();
-        v.add(entry.getKey());
-        v.add(entry.getValue());
-        m.addRow(v);
-      }
-    }
-    //this.table = new JTable(m);
-    this.table = new GrowableTable(m);
+    this.table = new GrowableTable(this.setupTableModel(attributes, isEditable));
     this.mainPanel.setLayout(new BoxLayout(this.mainPanel, BoxLayout.Y_AXIS));
     this.nameLabel = new JLabel("Account Name:");
     this.mainPanel.add(nameLabel);
@@ -141,28 +135,27 @@ public class AccountWindow {
     this.parentWindow.modified = true;
     mainFrame.dispatchEvent(new WindowEvent(mainFrame, WindowEvent.WINDOW_CLOSING));
   }
-  
-  class GrowableTable extends JTable {
-    
-    public GrowableTable(DefaultTableModel m) {
-      super(m);
-    }
-    
-    @Override
-    public DefaultTableModel getModel() {
-      return (DefaultTableModel) super.getModel();
-    }
-    
-    @Override
-    public void editingStopped(ChangeEvent e) {
-      int row = getEditingRow();
-      int col = getEditingColumn();
-      super.editingStopped(e);
-      if (row == getRowCount() - 1 && col == getColumnCount() - 1)
-      {
-        getModel().addRow(new String[] {"", ""});
+
+  DefaultTableModel setupTableModel(Map<String, String> attributes, boolean isEditable) {
+    DefaultTableModel m = new DefaultTableModel() {
+      public boolean isCellEditable(int row, int column) {
+        return isEditable;
+      }
+    };
+    m.addColumn("Attribute");
+    m.addColumn("Value");
+    if (attributes.size() == 0) {
+      m.addRow(new String[] {"", ""});
+    } else {
+      Iterator<Entry<String, String>> iterator = attributes.entrySet().iterator();
+      while (iterator.hasNext()) {
+        Entry<String, String> entry = iterator.next();
+        Vector<String> v = new Vector<String>();
+        v.add(entry.getKey());
+        v.add(entry.getValue());
+        m.addRow(v);
       }
     }
+    return m;
   }
-
 }

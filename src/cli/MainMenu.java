@@ -48,7 +48,7 @@ public class MainMenu {
     } else if (parsedArgs.containsKey("i") && parsedArgs.containsKey("o")) {
       if (parsedArgs.containsKey("e") && !parsedArgs.containsKey("d")) {
         this.encryptFile(new File(parsedArgs.get("i")), new File(parsedArgs.get("o")));
-      } else if (parsedArgs.containsKey("d") && !parsedArgs.containsKey("d")) {
+      } else if (parsedArgs.containsKey("d") && !parsedArgs.containsKey("e")) {
         this.decryptFile(new File(parsedArgs.get("i")), new File(parsedArgs.get("o")));
       }
     } else {
