@@ -1,5 +1,6 @@
 package gui;
 
+import java.awt.HeadlessException;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.HashMap;
@@ -8,6 +9,8 @@ import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+
+import passwordio.DecryptionException;
 
 public class ControlPanel extends JPanel {
 
@@ -67,12 +70,17 @@ public class ControlPanel extends JPanel {
     }
     if (this.parentWindow.encryptedBuffer != null) {
       char[][] passwords = new PasswordEntryWindow("Enter the file passwords to confirm deletion.", 2).getPasswords();
-      if (!this.parentWindow.encryptedBuffer.validatePassword(passwords)) {
-        JOptionPane.showMessageDialog(this.parentWindow.mainFrame,
-            "One or more of the passwords was incorrect.",
-            "Incorrect Password",
-            JOptionPane.ERROR_MESSAGE);
-        return;
+      try {
+        if (!this.parentWindow.encryptedBuffer.validatePassword(passwords)) {
+          JOptionPane.showMessageDialog(this.parentWindow.mainFrame,
+              "One or more of the passwords was incorrect.",
+              "Incorrect Password",
+              JOptionPane.ERROR_MESSAGE);
+          return;
+        }
+      } catch (DecryptionException e) {
+        // TODO Auto-generated catch block
+        e.printStackTrace();
       }
     }
     this.parentWindow.recordMap.remove(this.parentWindow.listPanel.accountList.getSelectedValue());

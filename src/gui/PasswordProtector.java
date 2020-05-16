@@ -1,6 +1,9 @@
 package gui;
 
 import java.awt.EventQueue;
+import java.util.Locale;
+import java.util.MissingResourceException;
+import java.util.ResourceBundle;
 
 /**
  * Main class for the PasswordProtector GUI.  This class creates an event Queue which is used to
@@ -19,7 +22,11 @@ public class PasswordProtector {
 
       @Override
       public void run() {
-        new MainWindow();
+        try {
+          new MainWindow(ResourceBundle.getBundle("gui.StringsBundle", Locale.getDefault()));
+        } catch (MissingResourceException e) {
+          new MainWindow(ResourceBundle.getBundle("gui.StringsBundle", new Locale("en", "US")));
+        }
       }
 
     });

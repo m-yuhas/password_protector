@@ -10,20 +10,36 @@ import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.MissingResourceException;
+import java.util.ResourceBundle;
 
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-
 import passwordio.DecryptionException;
 import passwordio.EncryptedBuffer;
 import passwordio.EncryptionException;
 
+/**
+ * The main window of the password protector GUI.
+ */
 public class MainWindow {
   
+  private final static Map<String, Locale> supportedLanguages;
+  static {
+      Map<String, Locale> map = new HashMap<String, Locale>();
+      map.put("English", new Locale("en", "US"));
+      map.put("español", new Locale("es", "MX"));
+      map.put("français", new Locale("fr", "CA"));
+      map.put("中文", new Locale("zh", "CN"));
+      supportedLanguages = Collections.unmodifiableMap(map);
+  }
   private ControlPanel controlPanel;
   public boolean modified = false;
   private File file;
@@ -32,88 +48,183 @@ public class MainWindow {
   public Map<String, Map<String, String>> recordMap;
   private MenuItem changeFilePasswordItem;
   EncryptedBuffer<Map<String, Map<String, String>>> encryptedBuffer;
+  public ResourceBundle resourceBundle;
 
-  public MainWindow() {
+  public MainWindow(ResourceBundle resourceBundle) {
+    this.resourceBundle = resourceBundle;
     this.recordMap = new HashMap<String, Map<String,String>>();
     if (System.getProperty("os.name").contentEquals("Mac OS X")) {
       System.setProperty("apple.laf.userScreenMenuBar", "true");
     }
     this.mainFrame = new JFrame("Password Protector");
     this.mainFrame.addWindowListener(new java.awt.event.WindowAdapter() {
+ 
       @Override
       public void windowClosing(java.awt.event.WindowEvent windowEvent) {
         quit();
       }
+
     });
-    JPanel mainPanel = new JPanel();
-    this.listPanel = new ListPanel(this);
-    mainPanel.add(this.listPanel);
-    this.controlPanel = new ControlPanel(this);
-    mainPanel.add(this.controlPanel);
-    this.mainFrame.add(mainPanel);
-    MenuBar menuBar = new MenuBar();
-    Menu fileMenu = new Menu("File");
-    MenuItem newItem = new MenuItem("New", new MenuShortcut(KeyEvent.VK_N));
-    MenuItem openItem = new MenuItem("Open", new MenuShortcut(KeyEvent.VK_O));
-    MenuItem saveItem = new MenuItem("Save", new MenuShortcut(KeyEvent.VK_S));
-    this.changeFilePasswordItem = new MenuItem("Change File Password");
-    newItem.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent e) {
-        newWorkspace();
-      }
-    });
-    openItem.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent e) {
-        openFile();
-      }
-    });
-    saveItem.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent e) {
-        saveFile();
-      }
-    });
-    this.changeFilePasswordItem.setEnabled(false);
-    this.changeFilePasswordItem.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent e) {
-        changeFilePassword();
-      }
-    });
-    fileMenu.add(newItem);
-    fileMenu.add(openItem);
-    fileMenu.add(saveItem);
-    fileMenu.add(changeFilePasswordItem);
-    Menu passwordMenu = new Menu("Password");
-    MenuItem generatePasswordItem = new MenuItem("Generate Password");
-    generatePasswordItem.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent e) {
-        generatePassword();
-      }
-    });
-    passwordMenu.add(generatePasswordItem);
-    Menu encryptionMenu = new Menu("Encryption");
-    MenuItem encryptFileItem = new MenuItem("Encrypt File");
-    encryptFileItem.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent e) {
-        encryptFile();
-      }
-    });
-    MenuItem decryptFileItem = new MenuItem("Decrypt File");
-    decryptFileItem.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent e) {
-        decryptFile();
-      }
-    });
-    encryptionMenu.add(encryptFileItem);
-    encryptionMenu.add(decryptFileItem);
-    menuBar.add(fileMenu);
-    menuBar.add(passwordMenu);
-    menuBar.add(encryptionMenu);
-    this.mainFrame.setMenuBar(menuBar);
+    this.mainFrame.add(this.setupMainPanel());
+    this.mainFrame.setMenuBar(this.setupMenuBar());
     this.mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     this.mainFrame.pack();
     this.mainFrame.setVisible(true);
   }
   
+  private JPanel setupMainPanel() {
+    this.controlPanel = new ControlPanel(this);
+    this.listPanel = new ListPanel(this);
+    JPanel mainPanel = new JPanel();
+    mainPanel.add(this.listPanel);
+    mainPanel.add(this.controlPanel);
+    return mainPanel;
+  }
+
+  private MenuBar setupMenuBar() {
+    MenuBar menuBar = new MenuBar();
+    menuBar.add(this.setupFileMenu());
+    menuBar.add(this.setupPasswordMenu());
+    menuBar.add(this.setupEncryptionMenu());
+    menuBar.add(this.setupLanguageMenu());
+    return menuBar;
+  }
+
+  private Menu setupFileMenu() {
+    Menu fileMenu = new Menu("File");
+    fileMenu.add(this.setupNewMenuItem());
+    fileMenu.add(this.setupOpenMenuItem());
+    fileMenu.add(this.setupSaveMenuItem());
+    this.setupChangePasswordMenuItem();
+    fileMenu.add(this.changeFilePasswordItem);
+    return fileMenu;
+  }
+  
+  private MenuItem setupNewMenuItem() {
+    MenuItem newItem = new MenuItem("New", new MenuShortcut(KeyEvent.VK_N));
+    newItem.addActionListener(new ActionListener() {
+
+      public void actionPerformed(ActionEvent e) {
+        newWorkspace();
+      }
+
+    });
+    return newItem;
+  }
+  
+  private MenuItem setupOpenMenuItem() {
+    MenuItem openItem = new MenuItem("Open", new MenuShortcut(KeyEvent.VK_O));
+    openItem.addActionListener(new ActionListener() {
+
+      public void actionPerformed(ActionEvent e) {
+        openFile();
+      }
+
+    });
+    return openItem;
+  }
+
+  private MenuItem setupSaveMenuItem() {
+    MenuItem saveItem = new MenuItem("Save", new MenuShortcut(KeyEvent.VK_S));
+    saveItem.addActionListener(new ActionListener() {
+
+      public void actionPerformed(ActionEvent e) {
+        saveFile();
+      }
+
+    });
+    return saveItem;
+  }
+
+  private void setupChangePasswordMenuItem() {
+    this.changeFilePasswordItem = new MenuItem("Change File Password");
+    this.changeFilePasswordItem.setEnabled(false);
+    this.changeFilePasswordItem.addActionListener(new ActionListener() {
+
+      public void actionPerformed(ActionEvent e) {
+        changeFilePassword();
+      }
+
+    });
+  }
+
+  private Menu setupPasswordMenu() {
+    Menu passwordMenu = new Menu("Password");
+    passwordMenu.add(this.setupGeneratePasswordMenuItem());
+    return passwordMenu;
+  }
+
+  private MenuItem setupGeneratePasswordMenuItem() {
+    MenuItem generatePasswordItem = new MenuItem("Generate Password");
+    generatePasswordItem.addActionListener(new ActionListener() {
+
+      public void actionPerformed(ActionEvent e) {
+        generatePassword();
+      }
+
+    });
+    return generatePasswordItem;
+  }
+
+  private Menu setupEncryptionMenu() {
+    Menu encryptionMenu = new Menu("Encryption");
+    encryptionMenu.add(this.setupEncryptFileMenuItem());
+    encryptionMenu.add(this.setupDecryptFileMenuItem());
+    return encryptionMenu;
+  }
+
+  private MenuItem setupEncryptFileMenuItem() {
+    MenuItem encryptFileItem = new MenuItem("Encrypt File");
+    encryptFileItem.addActionListener(new ActionListener() {
+
+      public void actionPerformed(ActionEvent e) {
+        encryptFile();
+      }
+
+    });
+    return encryptFileItem;
+  }
+
+  private MenuItem setupDecryptFileMenuItem() {
+    MenuItem decryptFileItem = new MenuItem("Decrypt File");
+    decryptFileItem.addActionListener(new ActionListener() {
+
+      public void actionPerformed(ActionEvent e) {
+        decryptFile();
+      }
+
+    });
+    return decryptFileItem;
+  }
+
+  private Menu setupLanguageMenu() {
+    Menu languageMenu = new Menu("Language");
+    for (Entry<String, Locale> entry: MainWindow.supportedLanguages.entrySet()) {
+      MenuItem menuItem = new MenuItem(entry.getKey());
+      menuItem.addActionListener(new ActionListener() {
+
+        public void actionPerformed(ActionEvent e) {
+          setLanguage(entry.getValue());
+        }
+
+      });
+      languageMenu.add(menuItem);
+    }
+    return languageMenu;
+  }
+  
+  private void setLanguage(Locale locale) {
+    try {
+      this.resourceBundle = ResourceBundle.getBundle("gui.StringsBundle", locale);
+    } catch (MissingResourceException e) {
+      JOptionPane.showMessageDialog(this.mainFrame,
+          "Unable to load language resource file.",
+          "MissingResourceException",
+          JOptionPane.ERROR_MESSAGE);
+      return;
+    }
+  }
+
   public void newWorkspace() {
     if (this.recordMap.size() != 0) {
       Object[] options = {"Save", "Discard"};
@@ -161,6 +272,9 @@ public class MainWindow {
           "Incorrect Password",
           JOptionPane.ERROR_MESSAGE);
       return;
+    } catch (ClassNotFoundException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
     }
     this.listPanel.updateAccountList();
     this.changeFilePasswordItem.setEnabled(true);
@@ -179,12 +293,17 @@ public class MainWindow {
     }
     char[][] passwords = new PasswordEntryWindow("Enter the passwords needed save this file:", 2).getPasswords();
     if (this.encryptedBuffer != null) {
-      if (!this.encryptedBuffer.validatePassword(passwords)) {
-        JOptionPane.showMessageDialog(this.mainFrame,
-            "One or more of the passwords was incorrect.",
-            "Incorrect Password",
-            JOptionPane.ERROR_MESSAGE);
-        return;
+      try {
+        if (!this.encryptedBuffer.validatePassword(passwords)) {
+          JOptionPane.showMessageDialog(this.mainFrame,
+              "One or more of the passwords was incorrect.",
+              "Incorrect Password",
+              JOptionPane.ERROR_MESSAGE);
+          return;
+        }
+      } catch (DecryptionException e1) {
+        // TODO Auto-generated catch block
+        e1.printStackTrace();
       }
       try {
         this.encryptedBuffer.updateContents(this.recordMap, passwords);
@@ -242,12 +361,17 @@ public class MainWindow {
       }
     }
     char[][] oldPasswords = new PasswordEntryWindow("Enter the current passwords for this file:", 2).getPasswords();
-    if (!this.encryptedBuffer.validatePassword(oldPasswords[0], oldPasswords[1])) {
-      JOptionPane.showMessageDialog(this.mainFrame,
-          "One or more of the passwords was incorrect.",
-          "Incorrect Password",
-          JOptionPane.ERROR_MESSAGE);
-      return;
+    try {
+      if (!this.encryptedBuffer.validatePassword(oldPasswords[0], oldPasswords[1])) {
+        JOptionPane.showMessageDialog(this.mainFrame,
+            "One or more of the passwords was incorrect.",
+            "Incorrect Password",
+            JOptionPane.ERROR_MESSAGE);
+        return;
+      }
+    } catch (DecryptionException e1) {
+      // TODO Auto-generated catch block
+      e1.printStackTrace();
     }
     char[][] newPasswords = new PasswordEntryWindow("Enter the new passwords for this file:", 2).getPasswords();
     try {
@@ -385,6 +509,9 @@ public class MainWindow {
           "IOException",
           JOptionPane.ERROR_MESSAGE);
       return;
+    } catch (ClassNotFoundException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
     }
   }
 }
