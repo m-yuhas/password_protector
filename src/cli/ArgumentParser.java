@@ -9,9 +9,15 @@ import java.util.Map;
  */
 public class ArgumentParser {
 
+  /**
+   * The description of the command line argument.
+   */
   private String description;
+
+  /**
+   * List of all the acceptable command line arguments.
+   */
   private ArrayList<Argument> arguments;
-  private Map<String, String> parsedArgs;
 
   /**
    * Construct an instance of ArgumentParser.
@@ -52,8 +58,7 @@ public class ArgumentParser {
    *         unknown argument is provided.
    */
   public Map<String, String> parseArgs(String[] args) throws ParseException {
-    //TODO: break each state into own function
-    parsedArgs = new HashMap<String, String>();
+    Map<String, String> parsedArgs = new HashMap<String, String>();
     int state = 0;
     String next = "";
     for (String arg: args) {

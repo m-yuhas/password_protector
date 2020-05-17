@@ -19,10 +19,31 @@ import passwordio.EncryptionException;
  */
 public class PasswordProtector {
 
+  /**
+   * Boolean value to indicate if the open records file has been modified or not.
+   */
   private boolean modified = false;
+
+  /**
+   * The password record file to read and write to and from.
+   */
   private File file;
+
+  /**
+   * The resource bundle of internationalization strings.
+   */
   private ResourceBundle messages;
+
+  /**
+   * Password records are stored in this map when they are loaded into memory.  Modifications are
+   * first applied to this map and later written to an encrypted buffer and then a file.
+   */
   private Map<String, Map<String, String>> recordMap;
+
+  /**
+   * The map of records needs to be encrypted before writing to file, also when opening a file, the
+   * data is initially encrypted.  encryptedBuffer serves as a storage place for this data.
+   */
   private EncryptedBuffer<Map<String, Map<String, String>>> encryptedBuffer;
 
   /**

@@ -7,6 +7,8 @@ import java.awt.MenuShortcut;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -17,7 +19,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
-
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
@@ -30,6 +31,11 @@ import passwordio.EncryptionException;
  * The main window of the password protector GUI.
  */
 public class MainWindow {
+
+  /**
+   * ResourceBundle that includes language specific strings
+   */
+  protected ResourceBundle resourceBundle;
   
   private final static Map<String, Locale> supportedLanguages;
   static {
@@ -48,7 +54,7 @@ public class MainWindow {
   public Map<String, Map<String, String>> recordMap;
   private MenuItem changeFilePasswordItem;
   EncryptedBuffer<Map<String, Map<String, String>>> encryptedBuffer;
-  public ResourceBundle resourceBundle;
+
 
   public MainWindow(ResourceBundle resourceBundle) {
     this.resourceBundle = resourceBundle;
@@ -56,11 +62,15 @@ public class MainWindow {
     if (System.getProperty("os.name").contentEquals("Mac OS X")) {
       System.setProperty("apple.laf.userScreenMenuBar", "true");
     }
+    this.setupMainFrame();
+  }
+  
+  private void setupMainFrame() {
     this.mainFrame = new JFrame("Password Protector");
-    this.mainFrame.addWindowListener(new java.awt.event.WindowAdapter() {
- 
+    this.mainFrame.addWindowListener(new WindowAdapter() {
+
       @Override
-      public void windowClosing(java.awt.event.WindowEvent windowEvent) {
+      public void windowClosing(WindowEvent windowEvent) {
         quit();
       }
 
@@ -223,6 +233,8 @@ public class MainWindow {
           JOptionPane.ERROR_MESSAGE);
       return;
     }
+    this.mainFrame.dispose();
+    this.setupMainFrame();
   }
 
   public void newWorkspace() {

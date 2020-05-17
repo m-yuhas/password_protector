@@ -11,6 +11,9 @@ public class DecryptionException extends Exception {
    */
   public DecryptionExceptionCode errorCode;
 
+  /**
+   * Unique ID for serialization.
+   */
   private static final long serialVersionUID = 1285002778724566322L;
 
   /**

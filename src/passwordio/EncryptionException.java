@@ -6,6 +6,9 @@ package passwordio;
  */
 public class EncryptionException extends Exception {
 
+  /**
+   * Unique ID for serialization
+   */
   private static final long serialVersionUID = 6482502283009283419L;
 
   /**

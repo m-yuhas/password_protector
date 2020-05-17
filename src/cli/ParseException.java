@@ -6,6 +6,9 @@ package cli;
  */
 public class ParseException extends Exception {
 
+  /**
+   * Unique ID for serialization.
+   */
   private static final long serialVersionUID = 7583932604952895463L;
 
   /**

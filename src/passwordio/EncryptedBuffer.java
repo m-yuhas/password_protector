@@ -35,10 +35,37 @@ import javax.crypto.spec.SecretKeySpec;
  */
 public class EncryptedBuffer<T> {
 
+  /**
+   * Encrypted bytes resulting from encryption or from creating a buffer with already encrypted
+   * data.
+   */
   private byte[] encryptedBytes;
+
+  /**
+   * Number of iterations to use when generating a key.  This is the number of times the user input
+   * (salt and password) is hashed.  A higher number makes it harder to derive the correct key based
+   * on a password guess.  A higher number also slows down key generation.  If this field is
+   * changed, anything previously encrypted with this package will not be unencryptable with the new
+   * version.
+   */
   private final int keyGenerationIterations = 65536;
+
+  /**
+   * The default key length in bytes.  If this field is changed, anything previously encrypted with
+   * this package will not be unencryptable with the new version.
+   */
   private final int keyLength = 16;
+
+  /**
+   * The length of the initialization vector in bytes.  If this field is changed, anything
+   * previously encrypted with this package will not be unencryptable with the new version.
+   */
   private final int ivLength = 8;
+
+  /**
+   * Constant number of bits per byte.  Used when a function requires a number of bits as input, but
+   * the value is stored internally as in bytes.
+   */
   private final int bitsPerByte = 8;
 
   /**

@@ -38,7 +38,16 @@ public class PasswordGenerator {
       ']', '|', '\\', ':', ';', '"', '\'', '<', '>', ',', '.', '?', '/'
   };
 
+  /**
+   * SecureRandom number generator seeded when an instance of PasswordGenerator is initialized and
+   * persisting for the life of the object.
+   */
   private SecureRandom randomNumberGenerator;
+
+  /**
+   * ArrayList containing all the characters that are allowed in a generated password by this
+   * instance of PasswordGenerator.
+   */
   private ArrayList<Character> allowableCharacters;
 
   /**

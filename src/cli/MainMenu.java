@@ -7,7 +7,6 @@ import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.ResourceBundle;
-
 import passwordio.DecryptionException;
 import passwordio.EncryptedBuffer;
 import passwordio.EncryptionException;
@@ -17,7 +16,10 @@ import passwordio.EncryptionException;
  * the requested subroutines.
  */
 public class MainMenu {
-  
+
+  /**
+   * The resource bundle of internationalization strings.
+   */
   private ResourceBundle messages;
 
   /**
