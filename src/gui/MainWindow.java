@@ -33,10 +33,46 @@ import passwordio.EncryptionException;
 public class MainWindow {
 
   /**
-   * ResourceBundle that includes language specific strings
+   * ResourceBundle that includes language specific strings.
    */
   protected ResourceBundle resourceBundle;
-  
+
+  /**
+   * The JFrame that contains everything drawn as part of the main window.
+   */
+  protected JFrame mainFrame;
+
+  /**
+   * The portion of the window where the accounts are listed.
+   */
+  protected ListPanel listPanel;
+
+  /**
+   * The data structure containing the attributes and values for each protected account.  The keys
+   * are the account names as displayed in the ListPanel, and the values are a map of strings where
+   * the keys are an attribute (e.g. 'password'), and the values are the corresponding value
+   * (e.g. 'abc123').
+   */
+  protected Map<String, Map<String, String>> recordMap;
+
+  /**
+   * The encrypted buffer where encrypted data read from a password file is stored.  When loading a
+   * file recordMap is created by decrypting this buffer, and when saving a file, this buffer is
+   * created using the contents of recordMap.
+   */
+  protected EncryptedBuffer<Map<String, Map<String, String>>> encryptedBuffer;
+
+  /**
+   * If true, the currently data from the loaded file has been modified.  If false, no file has
+   * been loaded or the data from the file has not been modified.
+   */
+  protected boolean modified = false;
+
+  /**
+   * Supported languages that can be loaded on the fly from the "languages" menu.  The key is the
+   * language name as it should appear on the UI, and the value is the Locale to use when reloading
+   * the resource bundle.
+   */
   private final static Map<String, Locale> supportedLanguages;
   static {
       Map<String, Locale> map = new HashMap<String, Locale>();
@@ -46,16 +82,31 @@ public class MainWindow {
       map.put("中文", new Locale("zh", "CN"));
       supportedLanguages = Collections.unmodifiableMap(map);
   }
+
+  /**
+   * The portion of the window where the control action buttons are located.
+   */
   private ControlPanel controlPanel;
-  public boolean modified = false;
+
+  /**
+   * The currently loaded passwords file.
+   */
   private File file;
-  JFrame mainFrame;
-  public ListPanel listPanel;
-  public Map<String, Map<String, String>> recordMap;
+
+  /**
+   * This menu item allows the user to change the file password for the currently loaded password
+   * file.  Unlike the other menu items, changeFilePasswordItem becomes a class attribute, because
+   * the state of this menu item can toggle between active an inactive depending on if a file has
+   * been loaded or not.
+   */
   private MenuItem changeFilePasswordItem;
-  EncryptedBuffer<Map<String, Map<String, String>>> encryptedBuffer;
 
-
+  /**
+   * Construct an instance of MainWindow.
+   * 
+   * @param resourceBundle is the resource bundle containing the strings to use when initially
+   *        drawing window.
+   */
   public MainWindow(ResourceBundle resourceBundle) {
     this.resourceBundle = resourceBundle;
     this.recordMap = new HashMap<String, Map<String,String>>();
