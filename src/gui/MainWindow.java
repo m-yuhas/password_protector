@@ -115,9 +115,12 @@ public class MainWindow {
     }
     this.setupMainFrame();
   }
-  
+
+  /**
+   * Initialize the main JFrame for main window.
+   */
   private void setupMainFrame() {
-    this.mainFrame = new JFrame("Password Protector");
+    this.mainFrame = new JFrame(this.resourceBundle.getString("passwordProtector"));
     this.mainFrame.addWindowListener(new WindowAdapter() {
 
       @Override
@@ -132,7 +135,13 @@ public class MainWindow {
     this.mainFrame.pack();
     this.mainFrame.setVisible(true);
   }
-  
+
+  /**
+   * Initialize and return the main JPanel for the main frame.  This JPanel contains the control
+   * panel and the list panel.
+   *
+   * @return a JPanel containing the control panel and the list panel.
+   */
   private JPanel setupMainPanel() {
     this.controlPanel = new ControlPanel(this);
     this.listPanel = new ListPanel(this);
@@ -142,6 +151,11 @@ public class MainWindow {
     return mainPanel;
   }
 
+  /**
+   * Initialize the menu bar for the main window.
+   *
+   * @return a MenuBar containing all the menus for the main window.
+   */
   private MenuBar setupMenuBar() {
     MenuBar menuBar = new MenuBar();
     menuBar.add(this.setupFileMenu());
@@ -151,8 +165,13 @@ public class MainWindow {
     return menuBar;
   }
 
+  /**
+   * Initialize the file menu.
+   * 
+   * @return a Menu containing all the entries for the file menu.
+   */
   private Menu setupFileMenu() {
-    Menu fileMenu = new Menu("File");
+    Menu fileMenu = new Menu(this.resourceBundle.getString("file"));
     fileMenu.add(this.setupNewMenuItem());
     fileMenu.add(this.setupOpenMenuItem());
     fileMenu.add(this.setupSaveMenuItem());
@@ -160,9 +179,16 @@ public class MainWindow {
     fileMenu.add(this.changeFilePasswordItem);
     return fileMenu;
   }
-  
+
+  /**
+   * Initialize the 'new' menu item.
+   *
+   * @return a MenuItem for the 'new' action.
+   */
   private MenuItem setupNewMenuItem() {
-    MenuItem newItem = new MenuItem("New", new MenuShortcut(KeyEvent.VK_N));
+    MenuItem newItem = new MenuItem(
+        this.resourceBundle.getString("new"),
+        new MenuShortcut(KeyEvent.VK_N));
     newItem.addActionListener(new ActionListener() {
 
       public void actionPerformed(ActionEvent e) {
@@ -172,9 +198,16 @@ public class MainWindow {
     });
     return newItem;
   }
-  
+
+  /**
+   * Initialize the 'open' menu item.
+   *
+   * @return a MenuItem for the 'open' action.
+   */
   private MenuItem setupOpenMenuItem() {
-    MenuItem openItem = new MenuItem("Open", new MenuShortcut(KeyEvent.VK_O));
+    MenuItem openItem = new MenuItem(
+        this.resourceBundle.getString("open"),
+        new MenuShortcut(KeyEvent.VK_O));
     openItem.addActionListener(new ActionListener() {
 
       public void actionPerformed(ActionEvent e) {
@@ -185,8 +218,15 @@ public class MainWindow {
     return openItem;
   }
 
+  /**
+   * Initialize the 'save' menu item.
+   *
+   * @return a MenuItem for the 'save' action.
+   */
   private MenuItem setupSaveMenuItem() {
-    MenuItem saveItem = new MenuItem("Save", new MenuShortcut(KeyEvent.VK_S));
+    MenuItem saveItem = new MenuItem(
+        this.resourceBundle.getString("save"),
+        new MenuShortcut(KeyEvent.VK_S));
     saveItem.addActionListener(new ActionListener() {
 
       public void actionPerformed(ActionEvent e) {
@@ -197,6 +237,10 @@ public class MainWindow {
     return saveItem;
   }
 
+  /**
+   * Initialize the 'change password' menu item.  This method returns void since
+   * changeFilePasswordItem is a class attribute.
+   */
   private void setupChangePasswordMenuItem() {
     this.changeFilePasswordItem = new MenuItem("Change File Password");
     this.changeFilePasswordItem.setEnabled(false);
@@ -209,14 +253,24 @@ public class MainWindow {
     });
   }
 
+  /**
+   * Initialize the password menu.
+   *
+   * @return a Menu containing all the entries for the password menu.
+   */
   private Menu setupPasswordMenu() {
-    Menu passwordMenu = new Menu("Password");
+    Menu passwordMenu = new Menu(this.resourceBundle.getString("password"));
     passwordMenu.add(this.setupGeneratePasswordMenuItem());
     return passwordMenu;
   }
 
+  /**
+   * Initialize the 'generate password' menu item.
+   *
+   * @return a MenuItem for the 'generate password' action.
+   */
   private MenuItem setupGeneratePasswordMenuItem() {
-    MenuItem generatePasswordItem = new MenuItem("Generate Password");
+    MenuItem generatePasswordItem = new MenuItem(this.resourceBundle.getString("generatePassword"));
     generatePasswordItem.addActionListener(new ActionListener() {
 
       public void actionPerformed(ActionEvent e) {
@@ -227,15 +281,25 @@ public class MainWindow {
     return generatePasswordItem;
   }
 
+  /**
+   * Initialize the encryption menu.
+   *
+   * @return a Menu containing all the entries for the encryption menu.
+   */
   private Menu setupEncryptionMenu() {
-    Menu encryptionMenu = new Menu("Encryption");
+    Menu encryptionMenu = new Menu(this.resourceBundle.getString("encryption"));
     encryptionMenu.add(this.setupEncryptFileMenuItem());
     encryptionMenu.add(this.setupDecryptFileMenuItem());
     return encryptionMenu;
   }
 
+  /**
+   * Initialize the 'encrypt file' menu item.
+   *
+   * @return a MenuItem for the 'encrypt file' action.
+   */
   private MenuItem setupEncryptFileMenuItem() {
-    MenuItem encryptFileItem = new MenuItem("Encrypt File");
+    MenuItem encryptFileItem = new MenuItem(this.resourceBundle.getString("encryptFile"));
     encryptFileItem.addActionListener(new ActionListener() {
 
       public void actionPerformed(ActionEvent e) {
@@ -246,8 +310,13 @@ public class MainWindow {
     return encryptFileItem;
   }
 
+  /**
+   * Initialize the 'decrypt file' menu item.
+   *
+   * @return a MenuItem for the 'decrypt file' action.
+   */
   private MenuItem setupDecryptFileMenuItem() {
-    MenuItem decryptFileItem = new MenuItem("Decrypt File");
+    MenuItem decryptFileItem = new MenuItem(this.resourceBundle.getString("decryptFile"));
     decryptFileItem.addActionListener(new ActionListener() {
 
       public void actionPerformed(ActionEvent e) {
@@ -258,8 +327,13 @@ public class MainWindow {
     return decryptFileItem;
   }
 
+  /**
+   * Initialize the language menu.
+   *
+   * @return a Menu containing all the entries for the language menu.
+   */
   private Menu setupLanguageMenu() {
-    Menu languageMenu = new Menu("Language");
+    Menu languageMenu = new Menu(this.resourceBundle.getString("language"));
     for (Entry<String, Locale> entry: MainWindow.supportedLanguages.entrySet()) {
       MenuItem menuItem = new MenuItem(entry.getKey());
       menuItem.addActionListener(new ActionListener() {
@@ -273,7 +347,12 @@ public class MainWindow {
     }
     return languageMenu;
   }
-  
+
+  /**
+   * Set the language for the UI.  This method will redraw the entire main window.
+   *
+   * @param locale is the locale to use when loading the resource bundle with localized strings.
+   */
   private void setLanguage(Locale locale) {
     try {
       this.resourceBundle = ResourceBundle.getBundle("gui.StringsBundle", locale);
