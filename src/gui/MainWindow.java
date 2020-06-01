@@ -24,6 +24,7 @@ import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import passwordio.DecryptionException;
+import passwordio.DecryptionExceptionCode;
 import passwordio.EncryptedBuffer;
 import passwordio.EncryptionException;
 
@@ -125,7 +126,7 @@ public class MainWindow {
 
       @Override
       public void windowClosing(WindowEvent windowEvent) {
-        quit();
+        promptSaveChanges();
       }
 
     });
@@ -357,9 +358,10 @@ public class MainWindow {
     try {
       this.resourceBundle = ResourceBundle.getBundle("gui.StringsBundle", locale);
     } catch (MissingResourceException e) {
-      JOptionPane.showMessageDialog(this.mainFrame,
-          "Unable to load language resource file.",
-          "MissingResourceException",
+      JOptionPane.showMessageDialog(
+          this.mainFrame,
+          this.resourceBundle.getString("loadLanguageError"),
+          this.resourceBundle.getString("loadLanguageErrorTitle"),
           JOptionPane.ERROR_MESSAGE);
       return;
     }
@@ -367,28 +369,27 @@ public class MainWindow {
     this.setupMainFrame();
   }
 
+  /**
+   * Create a new workspace.  Check if the user wants to save before creating a new list of password
+   * records and deleting the old one.
+   */
   public void newWorkspace() {
-    if (this.recordMap.size() != 0) {
-      Object[] options = {"Save", "Discard"};
-      int returnCode = JOptionPane.showOptionDialog(
-          this.mainFrame,
-          "There are unsaved changes in the current workspace.  Would you like to save before creating a new one?",
-          "Save or Discard Changes?",
-          JOptionPane.YES_NO_OPTION,
-          JOptionPane.QUESTION_MESSAGE,
-          null,
-          options,
-          options[0]);
-      if (returnCode == JOptionPane.YES_OPTION) {
-        saveFile();
-      }
-    }
+    this.promptSaveChanges();
     this.file = null;
     this.recordMap = new HashMap<String, Map<String, String>>();
     this.listPanel.updateAccountList();
   }
 
+  /**
+   * Open a password file and load the data into the current workspace.  The behavior should be as
+   * follows: 1) check if the current workspace has been modified and needs to be saved first;  2)
+   * present a file dialog to select the file to open;  3) present a password prompt to fetch the
+   * passwords to decrypt the file; 4) open and decrypt the file; 5) redraw the main window to
+   * reflect the contents of the file that was just opened.  Error messages should be displayed to
+   * the user as dialog boxes and should be intelligible to the lay user.
+   */
   public void openFile() {
+    this.promptSaveChanges();
     JFileChooser fileChooser = new JFileChooser();
     fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
     fileChooser.setMultiSelectionEnabled(false);
@@ -396,103 +397,116 @@ public class MainWindow {
       return;
     }
     this.file = fileChooser.getSelectedFile();
-    char[][] passwords = new PasswordEntryWindow("Enter the passwords needed to unlock this file:", 2).getPasswords();
+    char[][] passwords = new PasswordEntryWindow(this.resourceBundle.getString("openFile"), 2)
+        .getPasswords();
     try {
       this.encryptedBuffer = new EncryptedBuffer<Map<String, Map<String, String>>>(this.file);
     } catch (IOException e) {
-      JOptionPane.showMessageDialog(this.mainFrame,
-          "IOException occurred while attempting to open the file.",
-          "IOException",
+      JOptionPane.showMessageDialog(
+          this.mainFrame,
+          this.resourceBundle.getString("openFileError"),
+          this.resourceBundle.getString("ioError"),
           JOptionPane.ERROR_MESSAGE);
       return;
     }
     try {
-      this.recordMap = encryptedBuffer.decrypt(passwords[0], passwords[1]);
-    } catch (DecryptionException e) {
-      JOptionPane.showMessageDialog(this.mainFrame,
-          "One or more of the passwords was incorrect.",
-          "Incorrect Password",
+      this.recordMap = encryptedBuffer.decrypt(passwords);
+    } catch (DecryptionException | ClassNotFoundException e) {
+      JOptionPane.showMessageDialog(
+          this.mainFrame,
+          this.resourceBundle.getString("passwordError"),
+          this.resourceBundle.getString("passwordIncorrect"),
           JOptionPane.ERROR_MESSAGE);
       return;
-    } catch (ClassNotFoundException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
     }
     this.listPanel.updateAccountList();
     this.changeFilePasswordItem.setEnabled(true);
   }
-  
+
+  /**
+   * Save the currently loaded workspace to a file.  The behavior should be as follows: 1) If no
+   * file is currently loaded, find out what the file name should be; 2) get the passwords required
+   * to save; 3) encrypt the current workspace; 4) write the resulting encrypted buffer to a file.
+   * Error messages should be displayed to the user as dialog boxes and should be intelligible to
+   * the lay user.
+   */
   public void saveFile() {
     if (this.file == null) {
       JFileChooser fileChooser = new JFileChooser();
       fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
       fileChooser.setMultiSelectionEnabled(false);
-      int returnCode = fileChooser.showSaveDialog(mainFrame);
-      if (returnCode != JFileChooser.APPROVE_OPTION) {
+      if (fileChooser.showSaveDialog(mainFrame) != JFileChooser.APPROVE_OPTION) {
         return;
       }
       this.file = fileChooser.getSelectedFile();
     }
-    char[][] passwords = new PasswordEntryWindow("Enter the passwords needed save this file:", 2).getPasswords();
-    if (this.encryptedBuffer != null) {
-      try {
-        if (!this.encryptedBuffer.validatePassword(passwords)) {
-          JOptionPane.showMessageDialog(this.mainFrame,
-              "One or more of the passwords was incorrect.",
-              "Incorrect Password",
-              JOptionPane.ERROR_MESSAGE);
-          return;
-        }
-      } catch (DecryptionException e1) {
-        // TODO Auto-generated catch block
-        e1.printStackTrace();
-      }
-      try {
-        this.encryptedBuffer.updateContents(this.recordMap, passwords);
-      } catch (EncryptionException e) {
-        JOptionPane.showMessageDialog(this.mainFrame,
-            "EncryptionException occurred while encrypting the data.",
-            "EncryptionException",
-            JOptionPane.ERROR_MESSAGE);
-        return;
-      }
-    } else {
-      try {
-        this.encryptedBuffer = new EncryptedBuffer<Map<String, Map<String, String>>>(this.recordMap, passwords[0], passwords[1]);
-      } catch (EncryptionException e) {
-        JOptionPane.showMessageDialog(this.mainFrame,
-            "EncryptionException occurred while encrypting the data.",
-            "EncryptionException",
-            JOptionPane.ERROR_MESSAGE);
-        return;
-      }
+    char[][] passwords = new PasswordEntryWindow(this.resourceBundle.getString("saveFile"), 2)
+        .getPasswords();
+    try {
+      if (this.encryptedBuffer != null) {
+          if (!this.encryptedBuffer.validatePassword(passwords)) {
+            throw new DecryptionException(
+                "Incorrect Password",
+                DecryptionExceptionCode.INCORRECT_PASSWORD);
+          }
+          this.encryptedBuffer.updateContents(this.recordMap, passwords);
+      } else {
+        this.encryptedBuffer = new EncryptedBuffer<Map<String, Map<String, String>>>(
+            this.recordMap,
+            passwords);
+      } 
+    } catch (EncryptionException e) {
+      JOptionPane.showMessageDialog(
+          this.mainFrame,
+          this.resourceBundle.getString("encryptionErrorText"),
+          this.resourceBundle.getString("encryptionErrorTitle"),
+          JOptionPane.ERROR_MESSAGE);
+      return;
+    } catch (DecryptionException e) {
+      JOptionPane.showMessageDialog(
+          this.mainFrame,
+          this.resourceBundle.getString("passwordError"),
+          this.resourceBundle.getString("passwordIncorrect"),
+          JOptionPane.ERROR_MESSAGE);
+      return;
     }
     try {
       this.encryptedBuffer.writeToFile(this.file);
     } catch (IOException e) {
-      JOptionPane.showMessageDialog(this.mainFrame,
-          "IOException occurred while attempting to open the file.",
-          "IOException",
+      JOptionPane.showMessageDialog(
+          this.mainFrame,
+          this.resourceBundle.getString("saveFileError"),
+          this.resourceBundle.getString("ioError"),
           JOptionPane.ERROR_MESSAGE);
       return;
     }
     this.modified = false;
   }
-  
+
+  /**
+   * Change the passwords protecting the current password file.  The behavior should be as follows:
+   * 1) verify that a file is loaded; 2) save the workspace if changes have been made since the
+   * last save; 3) get the old passwords and verify them; 4) get the new passwords and use them to
+   * write to the file.  Error messages should be displayed to the user as dialog boxes and should
+   * be intelligible to the lay user.
+   */
   public void changeFilePassword() {
     if (this.encryptedBuffer == null) {
-      JOptionPane.showMessageDialog(this.mainFrame,
-          "No passwords file is currently loaded.",
-          "Error",
+      JOptionPane.showMessageDialog(
+          this.mainFrame,
+          this.resourceBundle.getString("changePasswordError"),
+          this.resourceBundle.getString("error"),
           JOptionPane.ERROR_MESSAGE);
       return;
     }
     if (this.modified) {
-    Object[] options = {"Save", "Discard"};
+      Object[] options = {
+          this.resourceBundle.getString("save"),
+          this.resourceBundle.getString("discard")};
       int returnCode = JOptionPane.showOptionDialog(
           this.mainFrame,
-          "There are unsaved changes in the current workspace.  These will be automatically saved and written to the disk.  Is it okay to procede?",
-          "Save or Discard Changes?",
+          this.resourceBundle.getString("unsavedChangesNewPassword"),
+          this.resourceBundle.getString("unsavedChangesTitle"),
           JOptionPane.YES_NO_OPTION,
           JOptionPane.QUESTION_MESSAGE,
           null,
@@ -502,59 +516,80 @@ public class MainWindow {
         return;
       }
     }
-    char[][] oldPasswords = new PasswordEntryWindow("Enter the current passwords for this file:", 2).getPasswords();
     try {
-      if (!this.encryptedBuffer.validatePassword(oldPasswords[0], oldPasswords[1])) {
-        JOptionPane.showMessageDialog(this.mainFrame,
-            "One or more of the passwords was incorrect.",
+      char[][] oldPasswords = new PasswordEntryWindow(
+          this.resourceBundle.getString("changePasswordOldPassword"), 2).getPasswords();
+      if (!this.encryptedBuffer.validatePassword(oldPasswords)) {
+        throw new DecryptionException(
             "Incorrect Password",
-            JOptionPane.ERROR_MESSAGE);
-        return;
+            DecryptionExceptionCode.INCORRECT_PASSWORD);
       }
-    } catch (DecryptionException e1) {
-      // TODO Auto-generated catch block
-      e1.printStackTrace();
-    }
-    char[][] newPasswords = new PasswordEntryWindow("Enter the new passwords for this file:", 2).getPasswords();
-    try {
-      this.encryptedBuffer = new EncryptedBuffer<Map<String, Map<String, String>>>(this.recordMap, newPasswords[0], newPasswords[1]);
+      char[][] newPasswords = new PasswordEntryWindow(
+          this.resourceBundle.getString("changePasswordNewPassword"), 2).getPasswords();
+      this.encryptedBuffer = new EncryptedBuffer<Map<String, Map<String, String>>>(
+          this.recordMap,
+          newPasswords);
     } catch (EncryptionException e) {
-      JOptionPane.showMessageDialog(this.mainFrame,
-          "EncryptionException occurred while encrypting the data.",
-          "EncryptionException",
+      JOptionPane.showMessageDialog(
+          this.mainFrame,
+          this.resourceBundle.getString("encryptionErrorText"),
+          this.resourceBundle.getString("encryptionErrorTitle"),
+          JOptionPane.ERROR_MESSAGE);
+      return;
+    } catch (DecryptionException e) {
+      JOptionPane.showMessageDialog(
+          this.mainFrame,
+          this.resourceBundle.getString("passwordError"),
+          this.resourceBundle.getString("passwordIncorrect"),
           JOptionPane.ERROR_MESSAGE);
       return;
     }
     try {
       this.encryptedBuffer.writeToFile(this.file);
     } catch (IOException e) {
-      JOptionPane.showMessageDialog(this.mainFrame,
-          "IOException occurred while attempting to open the file.",
-          "IOException",
+      JOptionPane.showMessageDialog(
+          this.mainFrame,
+          this.resourceBundle.getString("saveFileError"),
+          this.resourceBundle.getString("ioError"),
           JOptionPane.ERROR_MESSAGE);
       return;
     }
     this.modified = false;
-    JOptionPane.showMessageDialog(this.mainFrame,
-        "File passwords updated successfully.",
-        "Success",
+    JOptionPane.showMessageDialog(
+        this.mainFrame,
+        this.resourceBundle.getString("changePasswordSuccess"),
+        this.resourceBundle.getString("success"),
         JOptionPane.INFORMATION_MESSAGE);
     return;
   }
-  
-  private void quit() {
-    if (modified) {
-      if (JOptionPane.showConfirmDialog(mainFrame, 
-          "There are unsaved changes in this workspace, do you want to save your changes?",
-          "Unsaved Changes", 
+
+  /**
+   * Check if the workspace has been modified since the last save and prompt the user if they want
+   * to save the changes.
+   */
+  private void promptSaveChanges() {
+    if (this.modified) {
+      String[] options = {
+          this.resourceBundle.getString("save"),
+          this.resourceBundle.getString("discard")};
+      int returnCode = JOptionPane.showOptionDialog(
+          this.mainFrame,
+          this.resourceBundle.getString("unsavedChanges"),
+          this.resourceBundle.getString("unsavedChangesTitle"),
           JOptionPane.YES_NO_OPTION,
-          JOptionPane.QUESTION_MESSAGE) == JOptionPane.YES_OPTION){
+          JOptionPane.QUESTION_MESSAGE,
+          null,
+          options,
+          options[0]);
+      if (returnCode == JOptionPane.YES_OPTION) {
         this.saveFile();
       }
-      System.out.println("No Option");
     }
   }
 
+  /**
+   * Open a window that can help the user generate a pseudorandom password.
+   */
   private void generatePassword() {
     new GeneratePasswordWindow();
   }
