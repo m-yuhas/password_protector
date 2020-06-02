@@ -402,21 +402,13 @@ public class MainWindow {
     try {
       this.encryptedBuffer = new EncryptedBuffer<Map<String, Map<String, String>>>(this.file);
     } catch (IOException e) {
-      JOptionPane.showMessageDialog(
-          this.mainFrame,
-          this.resourceBundle.getString("openFileError"),
-          this.resourceBundle.getString("ioError"),
-          JOptionPane.ERROR_MESSAGE);
+      this.displayOpenFileError();
       return;
     }
     try {
       this.recordMap = encryptedBuffer.decrypt(passwords);
     } catch (DecryptionException | ClassNotFoundException e) {
-      JOptionPane.showMessageDialog(
-          this.mainFrame,
-          this.resourceBundle.getString("passwordError"),
-          this.resourceBundle.getString("passwordIncorrect"),
-          JOptionPane.ERROR_MESSAGE);
+      this.displayPasswordIncorrectError();
       return;
     }
     this.listPanel.updateAccountList();
@@ -456,28 +448,16 @@ public class MainWindow {
             passwords);
       } 
     } catch (EncryptionException e) {
-      JOptionPane.showMessageDialog(
-          this.mainFrame,
-          this.resourceBundle.getString("encryptionErrorText"),
-          this.resourceBundle.getString("encryptionErrorTitle"),
-          JOptionPane.ERROR_MESSAGE);
+      this.displayEncryptionError();
       return;
     } catch (DecryptionException e) {
-      JOptionPane.showMessageDialog(
-          this.mainFrame,
-          this.resourceBundle.getString("passwordError"),
-          this.resourceBundle.getString("passwordIncorrect"),
-          JOptionPane.ERROR_MESSAGE);
+      this.displayPasswordIncorrectError();
       return;
     }
     try {
       this.encryptedBuffer.writeToFile(this.file);
     } catch (IOException e) {
-      JOptionPane.showMessageDialog(
-          this.mainFrame,
-          this.resourceBundle.getString("saveFileError"),
-          this.resourceBundle.getString("ioError"),
-          JOptionPane.ERROR_MESSAGE);
+      this.displaySaveFileError();
       return;
     }
     this.modified = false;
@@ -530,28 +510,16 @@ public class MainWindow {
           this.recordMap,
           newPasswords);
     } catch (EncryptionException e) {
-      JOptionPane.showMessageDialog(
-          this.mainFrame,
-          this.resourceBundle.getString("encryptionErrorText"),
-          this.resourceBundle.getString("encryptionErrorTitle"),
-          JOptionPane.ERROR_MESSAGE);
+      this.displayEncryptionError();
       return;
     } catch (DecryptionException e) {
-      JOptionPane.showMessageDialog(
-          this.mainFrame,
-          this.resourceBundle.getString("passwordError"),
-          this.resourceBundle.getString("passwordIncorrect"),
-          JOptionPane.ERROR_MESSAGE);
+      this.displayPasswordIncorrectError();
       return;
     }
     try {
       this.encryptedBuffer.writeToFile(this.file);
     } catch (IOException e) {
-      JOptionPane.showMessageDialog(
-          this.mainFrame,
-          this.resourceBundle.getString("saveFileError"),
-          this.resourceBundle.getString("ioError"),
-          JOptionPane.ERROR_MESSAGE);
+      this.displaySaveFileError();
       return;
     }
     this.modified = false;
@@ -593,7 +561,14 @@ public class MainWindow {
   private void generatePassword() {
     new GeneratePasswordWindow();
   }
-  
+
+  /**
+   * Encrypt a file (not a password file) with a single password.  The behavior should be as
+   * follows: 1) prompt the user to select the file they want to encrypt; 2) gather the password to
+   * use for encryption; 3) prompt the user to select the destination file; 4) encrypt the contents
+   * of the input file and write it to the output file.  Any error messages should be understandable
+   * to the lay user.
+   */
   private void encryptFile() {
     JFileChooser inputChooser = new JFileChooser();
     inputChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
@@ -601,27 +576,17 @@ public class MainWindow {
     if (inputChooser.showOpenDialog(this.mainFrame) != JFileChooser.APPROVE_OPTION) {
       return;
     }
-    char[][] passwords = new PasswordEntryWindow("Enter the password you want to use to protect this file:", 1).getPasswords();
-    EncryptedBuffer<Byte[]> buffer;
+    char[][] passwords = new PasswordEntryWindow(
+        this.resourceBundle.getString("encryptGetPassword"), 1).getPasswords();
+    EncryptedBuffer<byte[]> buffer;
     try {
       byte[] inputBytes = Files.readAllBytes(inputChooser.getSelectedFile().toPath());
-      Byte[] inputBytesObject = new Byte[inputBytes.length];
-      int i = 0;
-      for (byte b: inputBytes) {
-        inputBytesObject[i++] = b;
-      }
-      buffer = new EncryptedBuffer<Byte[]>(inputBytesObject, passwords);
+      buffer = new EncryptedBuffer<byte[]>(inputBytes, passwords);
     } catch (IOException e) {
-      JOptionPane.showMessageDialog(this.mainFrame,
-          "IOException occurred while attempting to open the file.",
-          "IOException",
-          JOptionPane.ERROR_MESSAGE);
+      this.displayOpenFileError();
       return;
     } catch (EncryptionException e) {
-      JOptionPane.showMessageDialog(this.mainFrame,
-          "EncryptionException occurred while attempting to encrypt the file contents.",
-          "EncryptionException",
-          JOptionPane.ERROR_MESSAGE);
+      this.displayEncryptionError();
       return;
     }
     JFileChooser outputChooser = new JFileChooser();
@@ -633,15 +598,19 @@ public class MainWindow {
     try {
       buffer.writeToFile(outputChooser.getSelectedFile());
     } catch (IOException e) {
-      JOptionPane.showMessageDialog(this.mainFrame,
-          "IOException occurred while attempting to open the file.",
-          "IOException",
-          JOptionPane.ERROR_MESSAGE);
+      this.displaySaveFileError();
       return;
     }
 
   }
-  
+
+  /**
+   * Decrypt a file (no a password file) with a single password.  The behavior should be as follows:
+   * 1) prompt the user for the encrypted file they want to decrypt; 2) prompt the user for the
+   * password to decrypt that file; 3) prompt the user for the destination path for the decrypted
+   * data; 4) decrypt the input file with the provided password and write the output to the output
+   * file.  Any error messages should be understandable to the lay user.
+   */
   private void decryptFile() {
     JFileChooser inputChooser = new JFileChooser();
     inputChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
@@ -649,15 +618,13 @@ public class MainWindow {
     if (inputChooser.showOpenDialog(this.mainFrame) != JFileChooser.APPROVE_OPTION) {
       return;
     }
-    char[][] passwords = new PasswordEntryWindow("Enter the password to decrypt this file:", 1).getPasswords();
-    EncryptedBuffer<Byte[]> buffer;
+    char[][] passwords = new PasswordEntryWindow(
+        this.resourceBundle.getString("decryptGetPassword"), 1).getPasswords();
+    EncryptedBuffer<byte[]> buffer;
     try {
-      buffer = new EncryptedBuffer<Byte[]>(inputChooser.getSelectedFile());
-    } catch (IOException e1) {
-      JOptionPane.showMessageDialog(this.mainFrame,
-          "IOException occurred while attempting to open the file.",
-          "IOException",
-          JOptionPane.ERROR_MESSAGE);
+      buffer = new EncryptedBuffer<byte[]>(inputChooser.getSelectedFile());
+    } catch (IOException e) {
+      this.displayOpenFileError();
       return;
     }
     JFileChooser outputChooser = new JFileChooser();
@@ -667,28 +634,58 @@ public class MainWindow {
       return;
     }
     try {
-      Byte[] outputBytesObject = buffer.decrypt(passwords);
-      byte[] outputBytes = new byte[outputBytesObject.length];
-      int i = 0;
-      for (Byte b: outputBytesObject) {
-        outputBytes[i++] = b.byteValue();
-      }
-      Files.write(outputChooser.getSelectedFile().toPath(), outputBytes);
-    } catch (DecryptionException e) {
-      JOptionPane.showMessageDialog(this.mainFrame,
-          "Incorrect Password.",
-          "Incorrect Password",
-          JOptionPane.ERROR_MESSAGE);
+      Files.write(outputChooser.getSelectedFile().toPath(), buffer.decrypt(passwords));
+    } catch (DecryptionException | ClassNotFoundException e) {
+      this.displayPasswordIncorrectError();
       return;
     } catch (IOException e) {
-      JOptionPane.showMessageDialog(this.mainFrame,
-          "IOException occurred while attempting to write the new file.",
-          "IOException",
-          JOptionPane.ERROR_MESSAGE);
+      this.displaySaveFileError();
       return;
-    } catch (ClassNotFoundException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
     }
   }
+
+  /**
+   * Display the error dialog for an error that occurs while saving a file.
+   */
+  void displaySaveFileError() {
+    JOptionPane.showMessageDialog(
+        this.mainFrame,
+        this.resourceBundle.getString("saveFileError"),
+        this.resourceBundle.getString("ioError"),
+        JOptionPane.ERROR_MESSAGE);
+  }
+
+  /**
+   * Display the error dialog for when one or more of the user-entered passwords is incorrect.
+   */
+  void displayPasswordIncorrectError() {
+    JOptionPane.showMessageDialog(
+        this.mainFrame,
+        this.resourceBundle.getString("passwordError"),
+        this.resourceBundle.getString("passwordIncorrect"),
+        JOptionPane.ERROR_MESSAGE);
+  }
+
+  /**
+   * Display the error dialog for an error that occurs while opening a file.
+   */
+  void displayOpenFileError() {
+    JOptionPane.showMessageDialog(
+        this.mainFrame,
+        this.resourceBundle.getString("openFileError"),
+        this.resourceBundle.getString("ioError"),
+        JOptionPane.ERROR_MESSAGE);
+  }
+
+  /**
+   * Display the error dialog for an error that occurs during encryption of data.
+   */
+  void displayEncryptionError() {
+    JOptionPane.showMessageDialog(
+        this.mainFrame,
+        this.resourceBundle.getString("encryptionErrorText"),
+        this.resourceBundle.getString("encryptionErrorTitle"),
+        JOptionPane.ERROR_MESSAGE);
+  }
+
 }
