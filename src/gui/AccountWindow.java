@@ -22,21 +22,52 @@ import javax.swing.table.DefaultTableModel;
  * Window containing a viewable list of attributes for an account.
  */
 public class AccountWindow {
-  
+
+  /**
+   * The MainWindow that created this AccountWindow.
+   */
   private MainWindow parentWindow;
+
+  /**
+   * GrowableTable do display the account attributes and values.
+   */
   private GrowableTable table;
-  private JButton saveButton;
-  private JButton quitButton;
+
+  /**
+   * JFrame that displays all the content of the AccountWindow.
+   */
   private JFrame mainFrame;
-  private JLabel nameLabel;
-  private JPanel mainPanel;
+
+  /**
+   * Text entry field that contains this record's name.
+   */
   private JTextField nameField;
+
+  /**
+   * Map of attributes for this record.  Keys are an attribute (e.g. 'password') and values are the
+   * corresponding value (e.g. '12345').
+   */
+  private Map<String, String> attributes;
+
+  /**
+   * The original name of the record, provided when the AccountWindow is created.
+   */
   private String originalName;
+
+  /**
+   * Boolean value: true if this AccountWindow is displaying a record that already exists in
+   * its MainWindow's record map, or false if this is meant to be a new record with no entries.
+   */
   private boolean existingRecord = false;
 
   /**
+   * Boolean value: if true this AccountWindow is editable, if false it is not editable.
+   */
+  private boolean isEditable;
+
+  /**
    * Construct an instance of AccountWindow and display it.
-   * 
+   *
    * @param parentWindow is a MainWindow object: the object that spawned this window.
    * @param attributes is a map of strings containing the attributes and values for this account.
    * @param name is a string representing the account name.  If the name is an empty string, this
@@ -55,38 +86,111 @@ public class AccountWindow {
     }
     this.originalName = name;
     this.parentWindow = parentWindow;
+    this.attributes = attributes;
+    this.isEditable = isEditable;
+    this.setupMainFrame();
+  }
+
+  /**
+   * Setup the main JFrame where all the contents of this window will be drawn.
+   */
+  private void setupMainFrame() {
     this.mainFrame = new JFrame();
-    this.mainPanel = new JPanel();
-    this.table = new GrowableTable(this.setupTableModel(attributes, isEditable));
-    this.mainPanel.setLayout(new BoxLayout(this.mainPanel, BoxLayout.Y_AXIS));
-    this.nameLabel = new JLabel("Account Name:");
-    this.mainPanel.add(nameLabel);
-    this.nameField = new JTextField();
-    this.nameField.setText(name);
-    this.nameField.setEditable(isEditable);
-    this.mainPanel.add(nameField);
-    this.mainPanel.add(new JScrollPane(this.table));
-    if (isEditable) {
-      this.saveButton = new JButton("Save");
-      this.saveButton.addActionListener(new ActionListener() {
-        public void actionPerformed(ActionEvent e) {
-          saveRecord();
-        }
-      });
-      this.mainPanel.add(this.saveButton);
-    }
-    this.quitButton = new JButton("Quit");
-    this.quitButton.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent e) {
-        mainFrame.dispatchEvent(new WindowEvent(mainFrame, WindowEvent.WINDOW_CLOSING));
-      }
-    });
-    this.mainPanel.add(this.quitButton);
-    this.mainFrame.add(this.mainPanel);
+    this.mainFrame.add(setupMainPanel());
     this.mainFrame.pack();
     this.mainFrame.setVisible(true);
   }
-  
+
+  /**
+   * Setup the main Panel in the main JFrame.
+   * 
+   * @return JPanel containing all the elements that should be drawn.
+   */
+  private JPanel setupMainPanel() {
+    JPanel mainPanel = new JPanel();
+    mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
+    JLabel nameLabel = new JLabel(this.parentWindow.resourceBundle.getString("accountWindowLabel"));
+    mainPanel.add(nameLabel);
+    this.nameField = new JTextField();
+    this.nameField.setText(this.originalName);
+    this.nameField.setEditable(this.isEditable);
+    mainPanel.add(this.nameField);
+    this.table = new GrowableTable(this.setupTableModel(this.attributes, this.isEditable));
+    mainPanel.add(new JScrollPane(this.table));
+    if (this.isEditable) {
+      mainPanel.add(this.setupSaveButton());
+    }
+    mainPanel.add(this.setupQuitButton());
+    return mainPanel;
+  }
+
+  /**
+   * Setup the save button and associated action listener.
+   * 
+   * @return JButton for the save button.
+   */
+  private JButton setupSaveButton() {
+    JButton saveButton = new JButton(this.parentWindow.resourceBundle.getString("save"));
+    saveButton.addActionListener(new ActionListener() {
+
+      public void actionPerformed(ActionEvent e) {
+        saveRecord();
+
+      }
+    });
+    return saveButton;
+  }
+
+  /**
+   * Setup the quit button and associated action listener.
+   * 
+   * @return JButton for the quit button.
+   */
+  private JButton setupQuitButton() {
+    JButton quitButton;
+    quitButton = new JButton(this.parentWindow.resourceBundle.getString("quit"));
+    quitButton.addActionListener(new ActionListener() {
+ 
+      public void actionPerformed(ActionEvent e) {
+        mainFrame.dispatchEvent(new WindowEvent(mainFrame, WindowEvent.WINDOW_CLOSING));
+      }
+
+    });
+    return quitButton;
+  }
+
+  /**
+   * Setup the default table model used to populate the growable table.
+   * 
+   * @param attributes is a map of attributes and their corresponding values to be displayed in a
+   *        tabular format.
+   * @param isEditable is boolean value where true means this table is editable and false means it
+   *        is not.
+   * @return DefaultTableModel configured to display two rows and certain number of columns with the
+   *         ability to edit cells or not.
+   */
+  DefaultTableModel setupTableModel(Map<String, String> attributes, boolean isEditable) {
+    DefaultTableModel tableModel = new DefaultTableModel() {
+
+      private static final long serialVersionUID = 1L;
+
+      public boolean isCellEditable(int row, int column) {
+        return isEditable;
+      }
+
+    };
+    tableModel.addColumn("Attribute");
+    tableModel.addColumn("Value");
+    if (attributes.size() == 0) {
+      tableModel.addRow(new String[] {"", ""});
+    } else {
+      for (Entry<String, String> entry: attributes.entrySet()) {
+        tableModel.addRow(new String[] {entry.getKey(), entry.getValue()});
+      }
+    }
+    return tableModel;
+  }
+
   public void saveRecord() {
     String recordName = this.nameField.getText().strip();
     if (recordName.length() == 0) {
@@ -136,26 +240,4 @@ public class AccountWindow {
     mainFrame.dispatchEvent(new WindowEvent(mainFrame, WindowEvent.WINDOW_CLOSING));
   }
 
-  DefaultTableModel setupTableModel(Map<String, String> attributes, boolean isEditable) {
-    DefaultTableModel m = new DefaultTableModel() {
-      public boolean isCellEditable(int row, int column) {
-        return isEditable;
-      }
-    };
-    m.addColumn("Attribute");
-    m.addColumn("Value");
-    if (attributes.size() == 0) {
-      m.addRow(new String[] {"", ""});
-    } else {
-      Iterator<Entry<String, String>> iterator = attributes.entrySet().iterator();
-      while (iterator.hasNext()) {
-        Entry<String, String> entry = iterator.next();
-        Vector<String> v = new Vector<String>();
-        v.add(entry.getKey());
-        v.add(entry.getValue());
-        m.addRow(v);
-      }
-    }
-    return m;
-  }
 }

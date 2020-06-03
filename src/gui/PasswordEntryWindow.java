@@ -53,23 +53,7 @@ public class PasswordEntryWindow extends JDialog {
       passwordPanel.add(this.passwordFields[i]);
       this.mainPanel.add(passwordPanel);
     }
-    /*
-    JPanel password1Panel = new JPanel();
-    this.password1Label = new JLabel("Password 1:");
-    password1Panel.add(this.password1Label);
 
-    this.password1Field = new JPasswordField(32);
-    password1Panel.add(this.password1Field);
-    this.mainPanel.add(password1Panel);
-    
-    JPanel password2Panel = new JPanel();
-    this.password2Label = new JLabel("Password 2:");
-    password2Panel.add(this.password2Label);
-
-    this.password2Field = new JPasswordField(32);
-    password2Panel.add(this.password2Field);
-    this.mainPanel.add(password2Panel);
-    */
 
     this.submitButton = new JButton("Submit");
     ListenForButton listener = new ListenForButton();
@@ -96,9 +80,6 @@ public class PasswordEntryWindow extends JDialog {
       passwords[i] = this.passwordFields[i].getPassword();
     }
     return passwords;
-    /*
-    return new char[][] {this.password1Field.getPassword(), this.password2Field.getPassword()};
-    */
   }
 
 }
