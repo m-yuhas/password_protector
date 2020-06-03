@@ -4,9 +4,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
-import java.util.Vector;
 import java.util.Map.Entry;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
@@ -179,8 +177,8 @@ public class AccountWindow {
       }
 
     };
-    tableModel.addColumn("Attribute");
-    tableModel.addColumn("Value");
+    tableModel.addColumn(this.parentWindow.resourceBundle.getString("attribute"));
+    tableModel.addColumn(this.parentWindow.resourceBundle.getString("value"));
     if (attributes.size() == 0) {
       tableModel.addRow(new String[] {"", ""});
     } else {
@@ -191,44 +189,98 @@ public class AccountWindow {
     return tableModel;
   }
 
-  public void saveRecord() {
+  /**
+   * Add the entered map of attributes and their values into the parent window's recordMap.
+   */
+  private void saveRecord() {
     String recordName = this.nameField.getText().strip();
-    if (recordName.length() == 0) {
-      JOptionPane.showMessageDialog(this.mainFrame,
-          "Please enter a name for this account.",
-          "Error",
-          JOptionPane.ERROR_MESSAGE);
+    if (!this.validateName(recordName)) {
       return;
     }
-    if (this.parentWindow.recordMap.containsKey(recordName) && !this.existingRecord) {
-      JOptionPane.showMessageDialog(this.mainFrame,
-          "An account with this name already exists.",
-          "Error",
-          JOptionPane.ERROR_MESSAGE);
+    try {
+      this.insertRecordIntoParent(this.generateMapping(), recordName);
+    } catch (AssertionError e) {
       return;
     }
+    this.mainFrame.dispatchEvent(new WindowEvent(this.mainFrame, WindowEvent.WINDOW_CLOSING));
+  }
+
+  /**
+   * Validate the current record name and make sure: 1) that it is not whitespace; and 2) that it
+   * does not already exist in the parent window's record map.  If the name is invalid, the
+   * appropriate warning messages should be displayed to the user here.
+   *
+   * @param name is a String of the name to validate
+   * @return boolean true if the name is valid, false if it is not.
+   */
+  private boolean validateName(String name) {
+    if (name.length() == 0) {
+      JOptionPane.showMessageDialog(
+          this.mainFrame,
+          this.parentWindow.resourceBundle.getString("accountWindowError1"),
+          this.parentWindow.resourceBundle.getString("error"),
+          JOptionPane.ERROR_MESSAGE);
+      return false;
+    } 
+    if (this.parentWindow.recordMap.containsKey(name) && !this.originalName.equals(name)) {
+      JOptionPane.showMessageDialog(
+          this.mainFrame,
+          this.parentWindow.resourceBundle.getString("accountWindowError0"),
+          this.parentWindow.resourceBundle.getString("error"),
+          JOptionPane.ERROR_MESSAGE);
+      return false;
+    }
+    return true;
+  }
+
+  /**
+   * Iterate through this window's table and return an map of attributes to their values.  Blank
+   * attributes should be ignored, as well as duplicates.  Any appropriate error messages should be
+   * displayed here.
+   *
+   * @return Map<String, String> where the keys correspond to attributes (column 0 in this window's
+   *         table) and the values correspond to the table values (column 1 in this window's table).
+   * @throws AssertionError if: 1) a value exists without a corresponding attribute; or 2) there are
+   *         duplicate attributes in this window's table. 
+   */
+  private Map<String, String> generateMapping() throws AssertionError {
     Map<String, String> record = new HashMap<String, String>();
     for (int i = 0; i < table.getRowCount(); i++) {
       String attribute = table.getModel().getValueAt(i, 0).toString().trim();
       String value = table.getModel().getValueAt(i, 1).toString().trim();
       if (value.length() != 0 && attribute.length() == 0) {
-        JOptionPane.showMessageDialog(this.mainFrame,
-            "Please make sure every value has a corresponding attribute.",
-            "Error",
+        JOptionPane.showMessageDialog(
+            this.mainFrame,
+            this.parentWindow.resourceBundle.getString("accountWindowError2"),
+            this.parentWindow.resourceBundle.getString("error"),
             JOptionPane.ERROR_MESSAGE);
-        return;
+        throw new AssertionError("No attribute for corresponding value.");
       }
       if (record.containsKey(attribute)) {
-        JOptionPane.showMessageDialog(this.mainFrame,
-            "Duplicate attribute \"" + attribute + "\" detected.",
-            "Error",
+        JOptionPane.showMessageDialog(
+            this.mainFrame,
+            this.parentWindow.resourceBundle.getString("accountWindowError3_1") + attribute + 
+            this.parentWindow.resourceBundle.getString("accountWindowError3_2"),
+            this.parentWindow.resourceBundle.getString("error"),
             JOptionPane.ERROR_MESSAGE);
-        return;
+        throw new AssertionError("Record contains duplicate keys.");
       }
       if (attribute.length() != 0) {
         record.put(attribute, value);
       }
     }
+    return record;    
+  }
+
+  /**
+   * Insert a map of strings into the parent window's record map with recordName as the key.
+   *
+   * @param record is a Map with Strings as keys and values corresponding to entries in this
+   *        window's table.
+   * @param recordName is the String to use as the key when inserting this record into the parent
+   *        window's record map.
+   */
+  private void insertRecordIntoParent(Map<String, String> record, String recordName) {
     this.parentWindow.recordMap.put(recordName, record);
     if (!this.originalName.equals(recordName) && this.existingRecord) {
       try {
@@ -237,7 +289,6 @@ public class AccountWindow {
     }
     this.parentWindow.listPanel.updateAccountList();
     this.parentWindow.modified = true;
-    mainFrame.dispatchEvent(new WindowEvent(mainFrame, WindowEvent.WINDOW_CLOSING));
   }
 
 }
