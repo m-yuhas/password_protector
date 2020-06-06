@@ -559,7 +559,7 @@ public class MainWindow {
    * Open a window that can help the user generate a pseudorandom password.
    */
   private void generatePassword() {
-    new GeneratePasswordWindow();
+    new GeneratePasswordWindow(this);
   }
 
   /**

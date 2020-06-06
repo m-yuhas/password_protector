@@ -1,24 +1,46 @@
 package gui;
 
 import java.awt.Dimension;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Map.Entry;
-
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.ListSelectionModel;
 
+/**
+ * ListPanel extends JPanel and is used to display the list of all accounts in a passwords file.
+ */
 public class ListPanel extends JPanel {
-  
+
   /**
-   * 
+   * JList to display the list of of accounts loaded from the parent window's record map.
    */
-  private static final long serialVersionUID = -1294042084540205908L;
-  private MainWindow parentWindow;
   public JList<String> accountList;
 
+  /**
+   * Unique ID for serialization.
+   */
+  private static final long serialVersionUID = -1294042084540205908L;
+
+  /**
+   * Minimum width for this JPanel.  Current value was determined experimentally.
+   */
+  private final int width = 250;
+
+  /**
+   * Minimum height for this JPanel.  Current value was determined experimentally.
+   */
+  private final int height = 500;
+
+  /**
+   * The parent window for which this panel is created.
+   */
+  private MainWindow parentWindow;
+
+  /**
+   * Construct an instance of ListPanel.
+   *
+   * @param parentWindow is the MainFrame where this ListPanel will be displayed.
+   */
   public ListPanel(MainWindow parentWindow) {
     this.parentWindow = parentWindow;
     this.accountList = new JList<String>();
@@ -26,18 +48,17 @@ public class ListPanel extends JPanel {
     this.accountList.setLayoutOrientation(JList.VERTICAL);
     this.accountList.setVisibleRowCount(-1);
     JScrollPane listScroller = new JScrollPane(this.accountList);
-    listScroller.setPreferredSize(new Dimension(250, 500));
+    listScroller.setPreferredSize(new Dimension(this.width, this.height));
     this.add(listScroller);
   }
 
+  /**
+   * Update the accounts displayed in this ListPanel with the current contents of the parent
+   * window's record map.
+   */
   public void updateAccountList() {
-    Iterator<Entry<String, Map<String, String>>> iterator = this.parentWindow.recordMap.entrySet().iterator();
-    String[] options = new String[this.parentWindow.recordMap.size()];
-    int i = 0;
-    while (iterator.hasNext()) {
-      options[i++] = iterator.next().getKey();
-    }
-    this.accountList.setListData(options);
+    this.accountList.setListData(this.parentWindow.recordMap.keySet().toArray(new String[0]));
     this.revalidate();
   }
+
 }
