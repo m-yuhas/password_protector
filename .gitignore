@@ -11,5 +11,8 @@ lib
 **/*.jar
 /bin/
 
+# Eclipse
+.pydevproject
+
 # Mac OS
 .DS_Store
