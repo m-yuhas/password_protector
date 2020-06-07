@@ -50,6 +50,7 @@ public class ListPanel extends JPanel {
     JScrollPane listScroller = new JScrollPane(this.accountList);
     listScroller.setPreferredSize(new Dimension(this.width, this.height));
     this.add(listScroller);
+    this.updateAccountList();
   }
 
   /**
