@@ -98,3 +98,15 @@ configure(jarCli) {
   group = 'Final'
   description = 'Build cli for distribution.'
 }
+
+task appBundle(type: Copy) {
+  dependsOn 'jarGui'
+  from "dist"
+  include "PasswordProtector.jar"
+  into "dist/PasswordProtector.app/Contents/MacOS"
+}
+
+configure(appBundle) {
+  group = 'Final'
+  description = 'Create a MacOS app bundle.'
+}

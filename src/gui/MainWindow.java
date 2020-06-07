@@ -397,7 +397,7 @@ public class MainWindow {
       return;
     }
     this.file = fileChooser.getSelectedFile();
-    char[][] passwords = new PasswordEntryWindow(this.resourceBundle.getString("openFile"), 2)
+    char[][] passwords = new PasswordEntryWindow(this, this.resourceBundle.getString("openFile"), 2)
         .getPasswords();
     try {
       this.encryptedBuffer = new EncryptedBuffer<Map<String, Map<String, String>>>(this.file);
@@ -432,7 +432,7 @@ public class MainWindow {
       }
       this.file = fileChooser.getSelectedFile();
     }
-    char[][] passwords = new PasswordEntryWindow(this.resourceBundle.getString("saveFile"), 2)
+    char[][] passwords = new PasswordEntryWindow(this, this.resourceBundle.getString("saveFile"), 2)
         .getPasswords();
     try {
       if (this.encryptedBuffer != null) {
@@ -498,14 +498,14 @@ public class MainWindow {
     }
     try {
       char[][] oldPasswords = new PasswordEntryWindow(
-          this.resourceBundle.getString("changePasswordOldPassword"), 2).getPasswords();
+          this, this.resourceBundle.getString("changePasswordOldPassword"), 2).getPasswords();
       if (!this.encryptedBuffer.validatePassword(oldPasswords)) {
         throw new DecryptionException(
             "Incorrect Password",
             DecryptionExceptionCode.INCORRECT_PASSWORD);
       }
       char[][] newPasswords = new PasswordEntryWindow(
-          this.resourceBundle.getString("changePasswordNewPassword"), 2).getPasswords();
+          this, this.resourceBundle.getString("changePasswordNewPassword"), 2).getPasswords();
       this.encryptedBuffer = new EncryptedBuffer<Map<String, Map<String, String>>>(
           this.recordMap,
           newPasswords);
@@ -577,7 +577,7 @@ public class MainWindow {
       return;
     }
     char[][] passwords = new PasswordEntryWindow(
-        this.resourceBundle.getString("encryptGetPassword"), 1).getPasswords();
+        this, this.resourceBundle.getString("encryptGetPassword"), 1).getPasswords();
     EncryptedBuffer<byte[]> buffer;
     try {
       byte[] inputBytes = Files.readAllBytes(inputChooser.getSelectedFile().toPath());
@@ -619,7 +619,7 @@ public class MainWindow {
       return;
     }
     char[][] passwords = new PasswordEntryWindow(
-        this.resourceBundle.getString("decryptGetPassword"), 1).getPasswords();
+        this, this.resourceBundle.getString("decryptGetPassword"), 1).getPasswords();
     EncryptedBuffer<byte[]> buffer;
     try {
       buffer = new EncryptedBuffer<byte[]>(inputChooser.getSelectedFile());

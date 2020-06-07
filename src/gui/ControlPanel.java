@@ -137,7 +137,9 @@ public class ControlPanel extends JPanel {
     }
     if (this.parentWindow.encryptedBuffer != null) {
       char[][] passwords = new PasswordEntryWindow(
-          this.parentWindow.resourceBundle.getString("deletePrompt"), 2).getPasswords();
+          this.parentWindow,
+          this.parentWindow.resourceBundle.getString("deletePrompt"),
+          2).getPasswords();
       try {
         if (!this.parentWindow.encryptedBuffer.validatePassword(passwords)) {
           throw new DecryptionException(
