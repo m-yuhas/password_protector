@@ -12,6 +12,14 @@ import numpy
 from PIL import Image, ImageDraw
 
 
+logging.basicConfig()
+LOGGER = logging.getLogger('Password Protector Packaging')
+LOGGER.setLevel(logging.INFO)
+
+
+DIST_DIR = path.join(path.dirname(__file__), '..', 'dist')
+
+
 PLIST = """
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -59,6 +67,7 @@ def parse_args() -> List[str]:
         print("Usage")
     return build_list
 
+
 def generate_icon() -> None:
     icon = Image.new('RGB', (1024, 1024), (0, 0, 0))
     draw = ImageDraw.Draw(icon)
@@ -104,7 +113,7 @@ def build_app_bundle() -> None:
     generate_icon()
 
 
-def main() -> None:
+if __name__ == '__main__':
     LOGGER.info('Building Packages for Mac OSX.')
     try:
         LOGGER.info('Checking OS Version...')
@@ -113,11 +122,3 @@ def main() -> None:
         LOGGER.critical(f'{error}')
         return
     build_app_bundle()
-
-
-logging.basicConfig()
-LOGGER = logging.getLogger('Password Protector Packaging')
-LOGGER.setLevel(logging.INFO)
-DIST_DIR = path.join(path.dirname(__file__), '..', 'dist')
-if __name__ == '__main__':
-    main()
