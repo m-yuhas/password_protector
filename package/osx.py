@@ -4,7 +4,7 @@
 import logging
 from os import path, makedirs
 from subprocess import call
-from sys import platform, argv
+from sys import platform, argv, exit
 from typing import List
 
 import cv2
@@ -12,12 +12,10 @@ import numpy
 from PIL import Image, ImageDraw
 
 
-logging.basicConfig()
-LOGGER = logging.getLogger('Password Protector Packaging')
-LOGGER.setLevel(logging.INFO)
+PROJECT_ROOT = path.join(path.dirname(__file__), '..')
 
 
-DIST_DIR = path.join(path.dirname(__file__), '..', 'dist')
+APP_BUNDLE_DIR = path.join(PROJECT_ROOT, 'dist', 'PasswordProtector.app')
 
 
 PLIST = """
@@ -56,15 +54,37 @@ java -jar PasswordProtector.jar
 """
 
 def parse_args() -> List[str]:
+    """
+    Parse the command line arguments and return a list of the packages to build.
+    If no arguments are provided return a list of all the build options.  If an
+    invalid argument is provided, an exception should be raised, and the help
+    menu printed.
+
+    Returns:
+        A list of strings corresponding to the packages to build.  Currently
+        app, dmg, cask, and brew are supported.
+
+    Raises:
+        ValueError if the user enters an argument that is not on the list of
+        supoprted command line arguments.
+    """
     recipes = ['app', 'dmg', 'cask', 'brew']
     if len(argv) == 1:
         return recipes
     build_list = []
-    for arg in argv:
-        if arg.lower() in recipes:
-            build_list.append(arg.lower())
-    if len(build_list) == 0:
-        print("Usage")
+    for arg in argv[1:]:
+        build_list.append(arg.lower())
+        if arg.lower() not in recipes:
+            print(
+                "Build packages for Mac OSX\n"
+                "Usage: python osx.py <app> <dmg> <cask> <brew>\n"
+                "If none of the optional arguments are added, all package \n"
+                "types will be built\n"
+                "app - build a Mac OSX app bundle.\n"
+                "dmg - build a dmg installer for Mac OSX\n"
+                "cask - build a homebrew cask\n"
+                "brew - build a homebrew brew")
+            raise ValueError("Invalid command line argument")
     return build_list
 
 
@@ -92,10 +112,6 @@ def generate_icon() -> None:
         current_icon.save(size, transparency=(0, 0, 0))
     # call(['iconutil', '-c', 'icns' 'blah.iconset'])
 
-def check_os_version() -> None:
-    if platform != 'darwin':
-        raise Exception(f'Invalid Operating System: {platform}')
-
 
 def build_app_bundle() -> None:
     LOGGER.info('Creating App Bundle Directory Tree')
@@ -114,11 +130,19 @@ def build_app_bundle() -> None:
 
 
 if __name__ == '__main__':
-    LOGGER.info('Building Packages for Mac OSX.')
+    packages = []
     try:
-        LOGGER.info('Checking OS Version...')
-        check_os_version()
-    except Exception as error:
-        LOGGER.critical(f'{error}')
-        return
-    build_app_bundle()
+        packages = parse_args()
+    except ValueError as error:
+        exit(1)
+    logging.basicConfig()
+    logger = logging.getLogger('Password Protector Packaging')
+    logger.setLevel(logging.INFO)
+    logger.info(f'Checking current platform...')
+    if platform != 'darwin':
+        logger.critical(f'Platform "{platform}" not supported!')
+        exit(1)
+    logger.info(f'Platform is {platform}.')
+    if 'app' or 'dmg' in packages:
+        build_app_bundle()
+    
