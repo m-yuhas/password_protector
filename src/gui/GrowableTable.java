@@ -38,8 +38,10 @@ class GrowableTable extends JTable {
    */
   @Override
   public void editingStopped(ChangeEvent e) {
+    int row = getEditingRow();
+    int column = getEditingColumn();
     super.editingStopped(e);
-    if (getEditingRow() == getRowCount() - 1 && getEditingColumn() == getColumnCount() - 1) {
+    if (row == getRowCount() - 1 && column == getColumnCount() - 1) {
       getModel().addRow(new String[] {"", ""});
     }
   }

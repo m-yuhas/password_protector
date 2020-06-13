@@ -2,19 +2,22 @@ package icon;
 
 import java.awt.Color;
 import java.awt.Dimension;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
+/**
+ * Create an icon set for the password protector application.
+ */
 public class CreateIconSet {
-  
+
+  /**
+   * Map of of the required file names and their dimensions for a Mac OSX icon set.
+   */
   private final static Map<String, Dimension> iconFiles;
   static {
     Map<String, Dimension> map = new HashMap<String, Dimension>();
@@ -31,45 +34,47 @@ public class CreateIconSet {
     iconFiles = Collections.unmodifiableMap(map);
   }
 
+  /**
+   * Entry point for execution.  Steps are to create a temporary folder at the specified path, then
+   * create each of the required png images in that folder.  Lastly use Mac OS's 'iconutil' command
+   * to create the icns file and then clean up temporary resources.
+   *
+   * @param args is the array of strings representing command line inputs.
+   */
   public static void main(String[] args) {
-    if (args.length > 1 && args[0] == "-h" || args[0] == "--help" || args.length > 2) {
+    if (args.length > 1 && args[0] == "-h" || args[0] == "--help" || args.length == 0) {
       System.out.println(
           "Create icon set for password protector's Mac OSX bundle.  Usage:\n" +
           "java icon.CreateIconSet <path to final .icns file>");
+      return;
     }
-    File temp = new File(args[0] + "PasswordProtector.iconset");
-    boolean bool = temp.mkdir();
-    if(bool){
-       System.out.println("Directory created successfully");
-    }else{
-       System.out.println("Sorry couldn’t create specified directory");
+    File tempPath = new File(args[0] + "/PasswordProtector.iconset/");
+    if (!tempPath.mkdirs()) {
+       System.out.println("Sorry couldn’t create specified directory.");
+       return;
     }
-    Icon p = new Icon();
-    p.setSize(1024, 1024);
-    p.setBackground(new Color(0, 0, 0, 255));
+    Icon icon = new Icon();
+    icon.setSize(1024, 1024);
+    icon.setBackground(new Color(0, 0, 0, 255));
     for (Entry<String, Dimension> entry: CreateIconSet.iconFiles.entrySet()) {
-      p.saveImage(args[0] + "PasswordProtector.iconset/" + entry.getKey(), entry.getValue());
+      icon.saveImage(Paths.get(tempPath.getPath(), entry.getKey()), entry.getValue());
     }
-    ProcessBuilder processBuilder = new ProcessBuilder();
-    processBuilder.command("bash", "-c", "iconutil -c icns " + args[0] + "PasswordProtector.iconset");
     try {
+      ProcessBuilder processBuilder = new ProcessBuilder();
+      processBuilder.command("bash", "-c", "iconutil -c icns " + tempPath.getPath());
       Process process = processBuilder.start();
-      StringBuilder output = new StringBuilder();
-      BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-      String line;
-      while ((line = reader.readLine()) != null) {
-        output.append(line + "\n");
+      if (process.waitFor() != 0) {
+        System.out.println("An error occurred while running iconutil.");
       }
-      int exitVal = process.waitFor();
-      if (exitVal == 0) {
-        System.out.println("Success!");
-        System.out.println(output);
-      }
-    } catch (IOException e) {
-      e.printStackTrace();
-    } catch (InterruptedException e) {
+    } catch (IOException | InterruptedException e) {
+      System.out.println("An error occurred while running iconutil.");
       e.printStackTrace();
     }
+    String[] tempFile = tempPath.list();
+    for(String file: tempFile){
+        new File(tempPath.getPath(), file).delete();
+    }
+    tempPath.delete();
   }
 
 }
