@@ -55,7 +55,7 @@ public class GeneratePasswordWindow {
   public GeneratePasswordWindow(MainWindow parentWindow) {
     this.parentWindow = parentWindow;
     this.setupCharacterChoices();
-    this.mainFrame = new JFrame("Generate Password");
+    this.mainFrame = new JFrame(this.parentWindow.resourceBundle.getString("generatePassword"));
     this.mainFrame.add(this.setupMainPanel());
     this.mainFrame.pack();
     this.mainFrame.setVisible(true);

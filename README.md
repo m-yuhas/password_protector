@@ -12,40 +12,150 @@ required so that if you are incapacitated, two trusted persons must be present
 to unlock the accounts.  A utility to generate passwords is also provided, as
 well as the ability to encrypt and decrypt files with a single password.
 
-## Build
+The underlying encryption mechanism is the Blowfish cypher with a 128 bit key.
+Each time data is encrypted a new salt and initial value are randomly
+generated.  The salt is the same length as the key and the initial value is 64
+bits.  The key is derived from the password using PBKDF2 with HMAC and the SHA1
+hashing function.
+
+## Setup the Build Environment
 
 This program is written in Java and uses a Gradle build script.  It is highly
-recommended to build and run with the latest version of the JRE.  Only Java 8
-and above are supported.
+recommended to build and run with the JDK version 14 or greater.  Earlier
+versions of Java have not been tested.  To build, Gradle 6 or greater is
+required.
 
 ### Mac OS
 
-1. First install [Homebrew](https://brew.sh)
-2. Next install Java (you can also download and install directly from [Oracle](https://www.oracle.com/java/technologies/javase-downloads.html)):
+* First install [Homebrew](https://brew.sh)
+* Next install Java (you can also download and install directly from [Oracle](https://www.oracle.com/java/technologies/javase-downloads.html)):
 
 ```
 brew cask install java
 ```
 
-3. Install Gradle:
+* Install Gradle:
 
 ```
 brew install gradle
 ```
 
-4. Clone this repository:
+### Windows
+
+* First install the latest version of the JDK following the instructions on
+    [Oracle's website](https://www.oracle.com/java/technologies/javase-jdk14-downloads.html)
+* Next install the latest version of Gradle following the instructions on
+    [Gradle's website](https://gradle.org/install/)
+
+### Linux (Debian)
+
+* First install the latest JDK:
+
+```
+sudo apt install default-jdk
+```
+
+* Install Gradle.  You will have to add a repository to apt to get the latest version:
+
+```
+sudo add-apt-repository ppa:cwchien/gradle
+sudo apt-get update
+sudo apt install gradle
+```
+
+### Linux (Red Hat)
+
+When this document was written, Java 14 and Gradle 6 were not included in any of
+the yum or dnf repositories.  This makes setting up the build environment a
+little more complicated.
+
+* First download the latest JDK (Check the URL before running on your own
+    system, this command assumes you are running on an x64 system):
+
+```
+$ curl -O https://download.java.net/java/GA/jdk14/076bab302c7b4508975440c56f6cc26a/36/GPL/openjdk-14_linux-x64_bin.tar.gz
+```
+
+* Unzip the file:
+
+```
+$ tar xvf openjdk-14_linux-x64_bin.tar.gz
+```
+
+* Copy the folder containing the binaries to /opt/:
+
+```
+$ sudo mv jdk-14 /opt/
+```
+
+* Add a script in your profile.d folder to add Java to the path on every login:
+
+```
+$ sudo tee /etc/profile.d/jdk14.sh <<EOF
+> export JAVA_HOME=/opt/jdk-14
+> export PATH=\$PATH:\$JAVA_HOME/bin
+> EOF
+```
+
+* Run the script we just created so that the Java path is added to the current
+    bash session:
+
+```
+$ source /etc/profile.d/jdk14.sh
+```
+
+* Get the the latest version of Gradle:
+
+```
+$ wget https://downloads.gradle-dn.com/distributions/gradle-6.5-bin.zip
+```
+
+* Unzip it:
+
+```
+$ unzip gradle-6.5-bin.zip
+```
+
+* Move the binaries to /usr/local/gradle:
+
+```
+$ sudo mv gradle-6.5 /usr/local/gradle
+```
+
+* Create a script in profile.d to add Gradle to the path on every login:
+
+```
+$ sudo echo "export PATH=/usr/local/gradle/bin:$PATH" >> /etc/profile.d/gradle.sh
+```
+
+* Run the script we just created to apply it this bash session:
+
+```
+$ sudo source /etc/profile.d/gradle.sh
+```
+
+* Clean up the temporary files:
+
+```
+$ rm openjdk-14_linux-x64_bin.tar.gz
+$ rm gradle-6.5-bin.zip
+```
+
+## Build
+
+* Clone this repository:
 
 ```
 git clone https://github.com/m-yuhas/password_protector.git
 ```
 
-5. Change working directory to the root of this repository:
+* Change working directory to the root of this repository:
 
 ```
 cd password_protector
 ```
 
-#### Building the GUI
+### Building the GUI
 
 Run the following commands:
 
@@ -56,7 +166,7 @@ gradle jarGui
 
 A file named *PasswordProtector.jar* should appear in the ```dist/``` directory
 
-#### Building the CLI
+### Building the CLI
 
 Run the following commands:
 
@@ -67,15 +177,7 @@ gradle jarCli
 
 A file named *PasswordProtectorCli.jar* should appear in the ```dist/``` directory
 
-### Windows
-
-### Linux (Debian)
-
-### Linux (Red Hat)
-
-## Usage
-
-### POSIX
+## Run
 
 #### GUI
 
@@ -117,12 +219,6 @@ To decrypt a file:
 ```
 $ java -jar PasswordProtectorCli.jar -d -i <encrypted file> -o <output file>
 ```
-
-### Windows
-
-#### GUI
-
-#### CLI
 
 ## Future Tasks
 
