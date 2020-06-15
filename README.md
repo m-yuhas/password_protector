@@ -6,27 +6,25 @@
 [Documentation en français](https://github.com/m-yuhas/password_protector/blob/master/doc/LISEZ-MOI.md)
 
 ## Introduction
-This program lets you store passwords, pin numbers, and answers to security
+This program lets you store passwords, PINs, and answers to security
 questions for various accounts.  To access the data, two unique passwords are
 required so that if you are incapacitated, two trusted persons must be present
 to unlock the accounts.  A utility to generate passwords is also provided, as
 well as the ability to encrypt and decrypt files with a single password.
 
 The underlying encryption mechanism is the Blowfish cypher with a 128 bit key.
-Each time data is encrypted a new salt and initial value are randomly
-generated.  The salt is the same length as the key and the initial value is 64
-bits.  The key is derived from the password using PBKDF2 with HMAC and the SHA1
-hashing function.
+Each time data is encrypted a new salt and initialization vector are randomly
+generated.  The salt is the same length as the key and the initialization vector
+is 64 bits.  The key is derived from the password using PBKDF2 with HMAC and the
+SHA-1 hashing function.
 
 ## Setup the Build Environment
-
 This program is written in Java and uses a Gradle build script.  It is highly
 recommended to build and run with the JDK version 14 or greater.  Earlier
 versions of Java have not been tested.  To build, Gradle 6 or greater is
 required.
 
 ### Mac OS
-
 * First install [Homebrew](https://brew.sh)
 * Next install Java (you can also download and install directly from [Oracle](https://www.oracle.com/java/technologies/javase-downloads.html)):
 
@@ -41,14 +39,12 @@ brew install gradle
 ```
 
 ### Windows
-
 * First install the latest version of the JDK following the instructions on
     [Oracle's website](https://www.oracle.com/java/technologies/javase-jdk14-downloads.html)
 * Next install the latest version of Gradle following the instructions on
     [Gradle's website](https://gradle.org/install/)
 
 ### Linux (Debian)
-
 * First install the latest JDK:
 
 ```
@@ -64,7 +60,6 @@ sudo apt install gradle
 ```
 
 ### Linux (Red Hat)
-
 When this document was written, Java 14 and Gradle 6 were not included in any of
 the yum or dnf repositories.  This makes setting up the build environment a
 little more complicated.
@@ -98,7 +93,7 @@ $ sudo tee /etc/profile.d/jdk14.sh <<EOF
 ```
 
 * Run the script we just created so that the Java path is added to the current
-    bash session:
+    Bash session:
 
 ```
 $ source /etc/profile.d/jdk14.sh
@@ -128,7 +123,7 @@ $ sudo mv gradle-6.5 /usr/local/gradle
 $ sudo echo "export PATH=/usr/local/gradle/bin:$PATH" >> /etc/profile.d/gradle.sh
 ```
 
-* Run the script we just created to apply it this bash session:
+* Run the script we just created to apply it this Bash session:
 
 ```
 $ sudo source /etc/profile.d/gradle.sh
@@ -142,7 +137,6 @@ $ rm gradle-6.5-bin.zip
 ```
 
 ## Build
-
 * Clone this repository:
 
 ```
@@ -156,7 +150,6 @@ cd password_protector
 ```
 
 ### Building the GUI
-
 Run the following commands:
 
 ```
@@ -167,7 +160,6 @@ gradle jarGui
 A file named *PasswordProtector.jar* should appear in the ```dist/``` directory
 
 ### Building the CLI
-
 Run the following commands:
 
 ```
@@ -178,9 +170,7 @@ gradle jarCli
 A file named *PasswordProtectorCli.jar* should appear in the ```dist/``` directory
 
 ## Run
-
 #### GUI
-
 To launch, double click the PasswordProtector.jar icon or launch from the
 command line:
 
@@ -189,7 +179,6 @@ java -jar PasswordProtectorCli.jar
 ```
 
 #### CLI
-
 To view the help menu, run:
 
 ```
@@ -221,6 +210,5 @@ $ java -jar PasswordProtectorCli.jar -d -i <encrypted file> -o <output file>
 ```
 
 ## Future Tasks
-
 - TODO: Include Gradle tasks to package the GUI jar file as a Bundle for
     MacOS and as a Windows Installer for Microsoft Windows.
