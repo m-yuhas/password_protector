@@ -1,10 +1,4 @@
 # Protector de Contraseñas
-[中文指南](https://github.com/m-yuhas/password_protector/blob/master/doc/读我档案.md)
-
-[Documentación en español](https://github.com/m-yuhas/password_protector/blob/master/doc/LÉAME.md)
-
-[Documentation en français](https://github.com/m-yuhas/password_protector/blob/master/doc/LISEZ-MOI.md)
-
 ## Introducción
 Este programa le permite a usted de almacenar contraseñas, PINs, y respuestas a
 las preguntas de seguridad para cuentas varias.  Para accesar los datos, dos
@@ -27,7 +21,7 @@ Las versiones de Java más tempranas no han sido probadas.  Para compilar, Gradl
 
 ### Mac OS
 * Primero, instale [Homebrew](https://brew.sh)
-* A continuación instale Java (you can also download and install directly from [Oracle](https://www.oracle.com/java/technologies/javase-downloads.html)):
+* A continuación instale Java (también puede cargar y instalar directamente de [Oracle](https://www.oracle.com/java/technologies/javase-downloads.html)):
 
 ```
 brew cask install java
@@ -217,3 +211,4 @@ $ java -jar PasswordProtectorCli.jar -d -i <encrypted file> -o <output file>
 ## Tareas Futuras
 - Incluir tasks de Gradle para empaquetar la GUI como un Bundle por MacOS y un
     Windows Installer por Microsoft Windows.
+

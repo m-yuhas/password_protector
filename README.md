@@ -212,3 +212,4 @@ $ java -jar PasswordProtectorCli.jar -d -i <encrypted file> -o <output file>
 ## Future Tasks
 - TODO: Include Gradle tasks to package the GUI jar file as a Bundle for
     MacOS and as a Windows Installer for Microsoft Windows.
+
