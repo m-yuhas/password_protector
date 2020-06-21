@@ -156,7 +156,8 @@ gradle clean
 gradle jarGui
 ```
 
-Un fichier que s'appelle *PasswordProtector.jar* devrait apparaître dans le répertoire de ```dist/```
+Un fichier que s'appelle *PasswordProtector.jar* devrait apparaître dans le
+répertoire de ```dist/```.
 
 ### Compiler la CLI
 Exécutez les commandes suivantes:
@@ -166,7 +167,8 @@ gradle clean
 gradle jarCli
 ```
 
-Un fichier que s'appelle *PasswordProtectorCli.jar* devrait apparaître dans le répertoire de ```dist/```
+Un fichier que s'appelle *PasswordProtectorCli.jar* devrait apparaître dans le
+répertoire de ```dist/```.
 
 ## Exécuter
 #### GUI

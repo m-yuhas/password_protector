@@ -157,7 +157,7 @@ gradle clean
 gradle jarGui
 ```
 
-A file named *PasswordProtector.jar* should appear in the ```dist/``` directory
+A file named *PasswordProtector.jar* should appear in the ```dist/``` directory.
 
 ### Building the CLI
 Run the following commands:
@@ -167,7 +167,8 @@ gradle clean
 gradle jarCli
 ```
 
-A file named *PasswordProtectorCli.jar* should appear in the ```dist/``` directory
+A file named *PasswordProtectorCli.jar* should appear in the ```dist/```
+directory.
 
 ## Run
 #### GUI
