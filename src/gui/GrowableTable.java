@@ -23,6 +23,7 @@ class GrowableTable extends JTable {
    */
   public GrowableTable(DefaultTableModel tableModel) {
     super(tableModel);
+    this.setCellSelectionEnabled(true);
   }
 
   /**
