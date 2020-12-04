@@ -6,6 +6,8 @@ import java.awt.event.WindowEvent;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.TreeMap;
+
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -182,7 +184,8 @@ public class AccountWindow {
     if (attributes.size() == 0) {
       tableModel.addRow(new String[] {"", ""});
     } else {
-      for (Entry<String, String> entry: attributes.entrySet()) {
+      TreeMap<String, String> sortedAttributes = new TreeMap<String, String>(attributes);
+      for (Entry<String, String> entry: sortedAttributes.entrySet() ) {
         tableModel.addRow(new String[] {entry.getKey(), entry.getValue()});
       }
     }

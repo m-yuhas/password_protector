@@ -1,6 +1,8 @@
 package gui;
 
 import java.awt.Dimension;
+import java.util.Arrays;
+
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -58,7 +60,9 @@ public class ListPanel extends JPanel {
    * window's record map.
    */
   public void updateAccountList() {
-    this.accountList.setListData(this.parentWindow.recordMap.keySet().toArray(new String[0]));
+    String[] accounts = this.parentWindow.recordMap.keySet().toArray(new String[0]);
+    Arrays.sort(accounts);
+    this.accountList.setListData(accounts);
     this.revalidate();
   }
 

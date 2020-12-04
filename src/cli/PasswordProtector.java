@@ -7,9 +7,12 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.TreeMap;
+
 import passwordio.DecryptionException;
 import passwordio.EncryptedBuffer;
 import passwordio.EncryptionException;
@@ -135,7 +138,9 @@ public class PasswordProtector {
    */
   private void list() {
     int count = 0;
-    for (String account: this.recordMap.keySet()) {
+    String[] accounts = this.recordMap.keySet().toArray(new String[0]);
+    Arrays.sort(accounts);
+    for (String account: accounts) {
       System.out.println(Integer.toString(++count) + ". " + account);
     }
     if (count == 0) {
@@ -150,7 +155,7 @@ public class PasswordProtector {
    */
   private void view(String recordName) {
     if (this.recordMap.containsKey(recordName)) {
-      Map<String, String> record = this.recordMap.get(recordName);
+      TreeMap<String, String> record = new TreeMap<String, String>(this.recordMap.get(recordName));
       for (String attribute: record.keySet()) {
         System.out.println(attribute + ": " + record.get(attribute));
       }
