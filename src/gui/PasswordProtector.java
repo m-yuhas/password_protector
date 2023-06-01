@@ -25,7 +25,8 @@ public class PasswordProtector {
         try {
           new MainWindow(ResourceBundle.getBundle("gui.StringsBundle", Locale.getDefault()));
         } catch (MissingResourceException e) {
-          new MainWindow(ResourceBundle.getBundle("gui.StringsBundle", new Locale("en", "US")));
+          Locale english = new Locale.Builder().setLanguage("en").build();
+          new MainWindow(ResourceBundle.getBundle("gui.StringsBundle", english));
         }
       }
 

@@ -9,7 +9,6 @@ import java.util.Map.Entry;
 import java.util.TreeMap;
 
 import javax.swing.BoxLayout;
-import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -109,7 +108,8 @@ public class AccountWindow {
   private JPanel setupMainPanel() {
     JPanel mainPanel = new JPanel();
     mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
-    JLabel nameLabel = new JLabel(this.parentWindow.resourceBundle.getString("accountWindowLabel"));
+    String name = this.parentWindow.resourceBundle.getString("accountWindowLabel");
+    JLabel nameLabel = new JLabel(name);
     mainPanel.add(nameLabel);
     this.nameField = new JTextField();
     this.nameField.setText(this.originalName);
@@ -127,10 +127,11 @@ public class AccountWindow {
   /**
    * Setup the save button and associated action listener.
    * 
-   * @return JButton for the save button.
+   * @return KeyableButton for the save button.
    */
-  private JButton setupSaveButton() {
-    JButton saveButton = new JButton(this.parentWindow.resourceBundle.getString("save"));
+  private KeyableButton setupSaveButton() {
+    String buttonText = this.parentWindow.resourceBundle.getString("save");
+    KeyableButton saveButton = new KeyableButton(buttonText);
     saveButton.addActionListener(new ActionListener() {
 
       public void actionPerformed(ActionEvent e) {
@@ -144,11 +145,12 @@ public class AccountWindow {
   /**
    * Setup the quit button and associated action listener.
    * 
-   * @return JButton for the quit button.
+   * @return KeyableButton for the quit button.
    */
-  private JButton setupQuitButton() {
-    JButton quitButton;
-    quitButton = new JButton(this.parentWindow.resourceBundle.getString("quit"));
+  private KeyableButton setupQuitButton() {
+    KeyableButton quitButton;
+    String buttonText = this.parentWindow.resourceBundle.getString("quit");
+    quitButton = new KeyableButton(buttonText);
     quitButton.addActionListener(new ActionListener() {
  
       public void actionPerformed(ActionEvent e) {
@@ -166,8 +168,8 @@ public class AccountWindow {
    *        tabular format.
    * @param isEditable is boolean value where true means this table is editable and false means it
    *        is not.
-   * @return DefaultTableModel configured to display two rows and certain number of columns with the
-   *         ability to edit cells or not.
+   * @return DefaultTableModel configured to display two rows and certain number of columns with
+   *         the ability to edit cells or not.
    */
   DefaultTableModel setupTableModel(Map<String, String> attributes, boolean isEditable) {
     DefaultTableModel tableModel = new DefaultTableModel() {
@@ -222,7 +224,8 @@ public class AccountWindow {
           this.mainFrame,
           this.parentWindow.resourceBundle.getString("accountWindowError1"),
           this.parentWindow.resourceBundle.getString("error"),
-          JOptionPane.ERROR_MESSAGE);
+          JOptionPane.ERROR_MESSAGE
+      );
       return false;
     } 
     if (this.parentWindow.recordMap.containsKey(name) && !this.originalName.equals(name)) {
@@ -230,7 +233,8 @@ public class AccountWindow {
           this.mainFrame,
           this.parentWindow.resourceBundle.getString("accountWindowError0"),
           this.parentWindow.resourceBundle.getString("error"),
-          JOptionPane.ERROR_MESSAGE);
+          JOptionPane.ERROR_MESSAGE
+      );
       return false;
     }
     return true;
@@ -256,16 +260,19 @@ public class AccountWindow {
             this.mainFrame,
             this.parentWindow.resourceBundle.getString("accountWindowError2"),
             this.parentWindow.resourceBundle.getString("error"),
-            JOptionPane.ERROR_MESSAGE);
+            JOptionPane.ERROR_MESSAGE
+        );
         throw new AssertionError("No attribute for corresponding value.");
       }
       if (record.containsKey(attribute)) {
         JOptionPane.showMessageDialog(
             this.mainFrame,
-            this.parentWindow.resourceBundle.getString("accountWindowError3_1") + attribute + 
+            this.parentWindow.resourceBundle.getString("accountWindowError3_1") +
+            attribute +
             this.parentWindow.resourceBundle.getString("accountWindowError3_2"),
             this.parentWindow.resourceBundle.getString("error"),
-            JOptionPane.ERROR_MESSAGE);
+            JOptionPane.ERROR_MESSAGE
+        );
         throw new AssertionError("Record contains duplicate keys.");
       }
       if (attribute.length() != 0) {

@@ -4,21 +4,17 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.HashMap;
 
-import javax.swing.BoxLayout;
-import javax.swing.JPanel;
+import javax.swing.JMenuItem;
+import javax.swing.JPopupMenu;
 
 import passwordio.DecryptionException;
 import passwordio.DecryptionExceptionCode;
 
 /**
- * ControlPanel extends JPanel and includes all the controls for actions on specific accounts.
+ * Popup menu that appears when right clicking on an account in the accounts list.  This popup
+ * menu contains a list of possible actions for any account.
  */
-public class ControlPanel extends JPanel {
-
-  /**
-   * Unique ID for serialization.
-   */
-  private static final long serialVersionUID = 8932199718088447354L;
+class ActionPopupMenu extends JPopupMenu {
 
   /**
    * The parent window for which this panel is created.
@@ -26,94 +22,89 @@ public class ControlPanel extends JPanel {
   private transient MainWindow parentWindow;
 
   /**
-   * Construct an instance of ControlPanel.
-   *
-   * @param parentWindow is the MainFrame where this ControlPanel will be displayed.
+   * Create an instance of the action popup menu and populate it with items.
+   * 
+   * @param parentWindow is an instance of MainWindow: the window that spawned this menu.
    */
-  public ControlPanel(MainWindow parentWindow) {
+  public ActionPopupMenu(MainWindow parentWindow) {
+    super();
     this.parentWindow = parentWindow;
-    this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-    this.add(this.setupViewButton());
-    this.add(this.setupAddButton());
-    this.add(this.setupDeleteButton());
-    this.add(this.setupModifyButton());
+    this.add(this.setupViewItem());
+    this.add(this.setupAddItem());
+    this.add(this.setupDeleteItem());
+    this.add(this.setupModifyItem());
   }
 
   /**
-   * Setup the button used to view an account.
-   *
-   * @return KeyableButton for the 'view' button.
+   * Prepare the menu item for viewing an account.
+   * 
+   * @return JMenuItem for viewing an acccount.
    */
-  private KeyableButton setupViewButton() {
-    String buttonText = this.parentWindow.resourceBundle.getString("view");
-    KeyableButton viewButton = new KeyableButton(buttonText);
-    viewButton.addActionListener(new ActionListener() {
+  private JMenuItem setupViewItem() {
+    JMenuItem viewItem = new JMenuItem(this.parentWindow.resourceBundle.getString("view"));
+    viewItem.addActionListener(new ActionListener() {
 
       public void actionPerformed(ActionEvent e) {
         view();
       }
 
     });
-    return viewButton;
+    return viewItem;
   }
 
   /**
-   * Setup the button used to add an account.
-   *
-   * @return KeyableButton for the 'add' button.
+   * Prepare the menu item for adding a new account.
+   * 
+   * @return JMenuItem for creating a new account.
    */
-  private KeyableButton setupAddButton() {
-    String buttonText = this.parentWindow.resourceBundle.getString("add");
-    KeyableButton addButton = new KeyableButton(buttonText);
-    addButton.addActionListener(new ActionListener() {
+  private JMenuItem setupAddItem() {
+    JMenuItem addItem = new JMenuItem(this.parentWindow.resourceBundle.getString("add"));
+    addItem.addActionListener(new ActionListener() {
 
       public void actionPerformed(ActionEvent e) {
         add();
       }
 
     });
-    return addButton;
+    return addItem;
   }
 
   /**
-   * Setup the button used to delete an account.
-   *
-   * @return KeyableButton for the 'delete' button.
+   * Prepare the menu item for deleting an account.
+   * 
+   * @return JMenuItem for deleting an account.
    */
-  private KeyableButton setupDeleteButton() {
-    String buttonText = this.parentWindow.resourceBundle.getString("delete");
-    KeyableButton deleteButton = new KeyableButton(buttonText);
-    deleteButton.addActionListener(new ActionListener() {
+  private JMenuItem setupDeleteItem() {
+    JMenuItem deleteItem = new JMenuItem(this.parentWindow.resourceBundle.getString("delete"));
+    deleteItem.addActionListener(new ActionListener() {
 
       public void actionPerformed(ActionEvent e) {
         delete();
       }
 
     });
-    return deleteButton;
-
+    return deleteItem;
   }
 
   /**
-   * Setup the button used to modify an account.
-   *
-   * @return KeyableButton for the 'modify' account.
+   * Prepare the menu item for modifying an account record.
+   * 
+   * @return JMenuItem for modifying an account record.
    */
-  private KeyableButton setupModifyButton() {
-    String buttonText = this.parentWindow.resourceBundle.getString("modify");
-    KeyableButton modifyButton = new KeyableButton(buttonText);
-    modifyButton.addActionListener(new ActionListener() {
+  private JMenuItem setupModifyItem() {
+    JMenuItem modifyItem = new JMenuItem(this.parentWindow.resourceBundle.getString("modify"));
+    modifyItem.addActionListener(new ActionListener() {
 
       public void actionPerformed(ActionEvent e) {
         modify();
       }
 
     });
-    return modifyButton;
+    return modifyItem;
   }
 
   /**
-   * View the selected account.
+   * View an account record.
    */
   private void view() {
     if (!this.parentWindow.listPanel.accountList.isSelectionEmpty()) {
@@ -128,14 +119,14 @@ public class ControlPanel extends JPanel {
   }
 
   /**
-   * Add a new account.
+   * Add a new account record.
    */
   private void add() {
     new AccountWindow(this.parentWindow, new HashMap<String, String>(), "", true);
   }
 
   /**
-   * Delete an account.
+   * Delete an account record.
    */
   private void delete() {
     if (this.parentWindow.listPanel.accountList.isSelectionEmpty()) {
@@ -151,7 +142,8 @@ public class ControlPanel extends JPanel {
         if (!this.parentWindow.encryptedBuffer.validatePassword(passwords)) {
           throw new DecryptionException(
               "Incorrect Password",
-              DecryptionExceptionCode.INCORRECT_PASSWORD);
+              DecryptionExceptionCode.INCORRECT_PASSWORD
+          );
         }
       } catch (DecryptionException e) {
         this.parentWindow.displayPasswordIncorrectError();
@@ -163,7 +155,7 @@ public class ControlPanel extends JPanel {
   }
 
   /**
-   * Modify an account.
+   * Modify an account record.
    */
   private void modify() {
     if (!this.parentWindow.listPanel.accountList.isSelectionEmpty()) {
@@ -176,5 +168,4 @@ public class ControlPanel extends JPanel {
       );
     }
   }
-
 }

@@ -19,10 +19,12 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
+
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+
 import passwordio.DecryptionException;
 import passwordio.DecryptionExceptionCode;
 import passwordio.EncryptedBuffer;
@@ -77,10 +79,10 @@ public class MainWindow {
   private final static Map<String, Locale> supportedLanguages;
   static {
       Map<String, Locale> map = new HashMap<String, Locale>();
-      map.put("English", new Locale("en", "US"));
-      map.put("español", new Locale("es", "MX"));
-      map.put("français", new Locale("fr", "CA"));
-      map.put("中文", new Locale("zh", "CN"));
+      map.put("English", new Locale.Builder().setLanguage("en").setRegion("US").build());
+      map.put("español", new Locale.Builder().setLanguage("es").setRegion("MX").build());
+      map.put("français", new Locale.Builder().setLanguage("fr").setRegion("CA").build());
+      map.put("中文", new Locale.Builder().setLanguage("zh").build());
       supportedLanguages = Collections.unmodifiableMap(map);
   }
 
@@ -362,7 +364,8 @@ public class MainWindow {
           this.mainFrame,
           this.resourceBundle.getString("loadLanguageError"),
           this.resourceBundle.getString("loadLanguageErrorTitle"),
-          JOptionPane.ERROR_MESSAGE);
+          JOptionPane.ERROR_MESSAGE
+      );
       return;
     }
     this.mainFrame.dispose();
@@ -439,13 +442,15 @@ public class MainWindow {
           if (!this.encryptedBuffer.validatePassword(passwords)) {
             throw new DecryptionException(
                 "Incorrect Password",
-                DecryptionExceptionCode.INCORRECT_PASSWORD);
+                DecryptionExceptionCode.INCORRECT_PASSWORD
+            );
           }
           this.encryptedBuffer.updateContents(this.recordMap, passwords);
       } else {
         this.encryptedBuffer = new EncryptedBuffer<Map<String, Map<String, String>>>(
             this.recordMap,
-            passwords);
+            passwords
+        );
       } 
     } catch (EncryptionException e) {
       this.displayEncryptionError();
@@ -527,7 +532,8 @@ public class MainWindow {
         this.mainFrame,
         this.resourceBundle.getString("changePasswordSuccess"),
         this.resourceBundle.getString("success"),
-        JOptionPane.INFORMATION_MESSAGE);
+        JOptionPane.INFORMATION_MESSAGE
+    );
     return;
   }
 
@@ -539,7 +545,8 @@ public class MainWindow {
     if (this.modified) {
       String[] options = {
           this.resourceBundle.getString("save"),
-          this.resourceBundle.getString("discard")};
+          this.resourceBundle.getString("discard")
+      };
       int returnCode = JOptionPane.showOptionDialog(
           this.mainFrame,
           this.resourceBundle.getString("unsavedChanges"),
@@ -548,7 +555,8 @@ public class MainWindow {
           JOptionPane.QUESTION_MESSAGE,
           null,
           options,
-          options[0]);
+          options[0]
+      );
       if (returnCode == JOptionPane.YES_OPTION) {
         this.saveFile();
       }
@@ -652,7 +660,8 @@ public class MainWindow {
         this.mainFrame,
         this.resourceBundle.getString("saveFileError"),
         this.resourceBundle.getString("ioError"),
-        JOptionPane.ERROR_MESSAGE);
+        JOptionPane.ERROR_MESSAGE
+    );
   }
 
   /**
@@ -663,7 +672,8 @@ public class MainWindow {
         this.mainFrame,
         this.resourceBundle.getString("passwordError"),
         this.resourceBundle.getString("passwordIncorrect"),
-        JOptionPane.ERROR_MESSAGE);
+        JOptionPane.ERROR_MESSAGE
+    );
   }
 
   /**
@@ -674,7 +684,8 @@ public class MainWindow {
         this.mainFrame,
         this.resourceBundle.getString("openFileError"),
         this.resourceBundle.getString("ioError"),
-        JOptionPane.ERROR_MESSAGE);
+        JOptionPane.ERROR_MESSAGE
+    );
   }
 
   /**

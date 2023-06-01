@@ -9,14 +9,15 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+
 import javax.swing.BoxLayout;
-import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+
 import passwordio.PasswordGenerator;
 
 /**
@@ -121,9 +122,9 @@ public class GeneratePasswordWindow {
    *
    * @return JButton for the 'generate password' button.
    */
-  private JButton setupGenerateButton() {
+  private KeyableButton setupGenerateButton() {
     String buttonText = this.parentWindow.resourceBundle.getString("generatePassword");
-    JButton generateButton = new JButton(buttonText);
+    KeyableButton generateButton = new KeyableButton(buttonText);
     generateButton.addActionListener(new ActionListener() {
 
       public void actionPerformed(ActionEvent e) {
@@ -137,10 +138,11 @@ public class GeneratePasswordWindow {
   /**
    * Setup the copy to clip board button and add the appropriate action listener.
    *
-   * @return JButton for the 'copy to clip board' button.
+   * @return KeyableButton for the 'copy to clip board' button.
    */
-  private JButton setupCopyButton() {
-    JButton copyButton = new JButton(this.parentWindow.resourceBundle.getString("copyToClipBoard"));
+  private KeyableButton setupCopyButton() {
+    String buttonText = this.parentWindow.resourceBundle.getString("copyToClipBoard");
+    KeyableButton copyButton = new KeyableButton(buttonText);
     copyButton.addActionListener(new ActionListener() {
 
       public void actionPerformed(ActionEvent e) {
