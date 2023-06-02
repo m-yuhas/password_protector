@@ -60,7 +60,7 @@ public class ListPanel extends JPanel {
   public ListPanel(MainWindow parentWindow) {
     this.parentWindow = parentWindow;
     this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-    JLabel searchLabel = new JLabel("Search:");
+    JLabel searchLabel = new JLabel(this.parentWindow.resourceBundle.getString("search"));
     this.add(searchLabel);
     this.searchField = new JTextField();
     this.searchField.setEditable(true);

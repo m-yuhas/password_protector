@@ -15,6 +15,11 @@ import passwordio.DecryptionExceptionCode;
  * menu contains a list of possible actions for any account.
  */
 class ActionPopupMenu extends JPopupMenu {
+  
+  /**
+   * Unique ID for serialization.
+   */
+  private static final long serialVersionUID = 8932199718088447354L;
 
   /**
    * The parent window for which this panel is created.
