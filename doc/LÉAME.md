@@ -75,7 +75,7 @@ $ curl -O https://download.java.net/java/GA/jdk14/076bab302c7b4508975440c56f6cc2
 $ tar xvf openjdk-14_linux-x64_bin.tar.gz
 ```
 
-* Copie la carpeta que contiene los acrchivos binarios a /opt/:
+* Mueva la carpeta que contiene los acrchivos binarios a /opt/:
 
 ```
 $ sudo mv jdk-14 /opt/
@@ -208,6 +208,27 @@ Para descifrar un archivo:
 
 ```
 $ java -jar PasswordProtectorCli.jar -d -i <encrypted file> -o <output file>
+```
+
+## Compilar y Ejecutar en Docker
+Además, puede compilar el archivo jar usando el archivo docker proporcionado:
+
+```
+docker build -t password_protector:latest .
+```
+
+Mientras compila la imagen, *PasswordProtectorCli.jar* y
+*PasswordProtector.jar* serán escrito a un volumen así pueden ser accedido aún
+si el contenedor no es activo.  En Linux, puede encontrar el volumen debajo
+del directorio */var/lib/docker/volumes*, mientras que en el Windows, puede
+encontrarlo debajo de *\\\\wsl$\docker-desktop-data\data\docker\volumes*.  Si
+una instalación compatible de Java no es disponible en el sistema de alojar,
+también puede ejecutar *PasswordProtectorCli.jar* en el contenedor y montar un
+volumen que contiene el archivo de contraseñas:
+
+```
+$ docker run -it -v <path to passwords file on host>:/data password_protector:latest
+# java -jar PasswordProtectorCli.jar -p /data/<passwords file>
 ```
 
 ## Tareas Futuras
