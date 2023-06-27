@@ -11,6 +11,11 @@ import javax.swing.JButton;
  */
 public class KeyableButton extends JButton {
 
+  /**
+   * Unique ID for serialization.
+   */
+  private static final long serialVersionUID = -1294042084540205908L;
+
   public KeyableButton(String buttonText) {
     super(buttonText);
     this.addKeyListener(new KeyAdapter() {

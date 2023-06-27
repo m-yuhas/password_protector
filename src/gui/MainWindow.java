@@ -82,7 +82,7 @@ public class MainWindow {
       map.put("English", new Locale.Builder().setLanguage("en").build());
       map.put("español", new Locale.Builder().setLanguage("es").build());
       map.put("français", new Locale.Builder().setLanguage("fr").build());
-      map.put("Bahasa Melayu", new Local.Builder().setLanguage("ms").build());
+      map.put("Bahasa Melayu", new Locale.Builder().setLanguage("ms").build());
       map.put("中文", new Locale.Builder().setLanguage("zh").build());
       supportedLanguages = Collections.unmodifiableMap(map);
   }

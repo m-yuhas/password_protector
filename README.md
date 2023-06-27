@@ -25,8 +25,8 @@ versions of Java have not been tested.  To build, Gradle 6 or greater is
 required.
 
 ### Mac OS
-* First install [Homebrew](https://brew.sh)
-* Next install Java (you can also download and install directly from [Oracle](https://www.oracle.com/java/technologies/javase-downloads.html)):
+* First, install [Homebrew](https://brew.sh)
+* Next, install Java (you can also download and install directly from [Oracle](https://www.oracle.com/java/technologies/javase-downloads.html)):
 
 ```
 brew cask install java
@@ -77,7 +77,7 @@ $ curl -O https://download.java.net/java/GA/jdk14/076bab302c7b4508975440c56f6cc2
 $ tar xvf openjdk-14_linux-x64_bin.tar.gz
 ```
 
-* Copy the folder containing the binaries to /opt/:
+* Move the folder containing the binaries to /opt/:
 
 ```
 $ sudo mv jdk-14 /opt/
@@ -208,6 +208,27 @@ To decrypt a file:
 
 ```
 $ java -jar PasswordProtectorCli.jar -d -i <encrypted file> -o <output file>
+```
+
+## Building and Running in Docker
+Additionally, you can build the jar file using the provided docker file:
+
+```
+docker build -t password_protector:latest .
+```
+
+While building the image, *PasswordProtectorCli.jar* and
+*PasswordProtector.jar* will be written to a volume so that they can be
+accessed even when the container is not active.  On Linux, the volume can be
+found under */var/lib/docker/volumes*, while on Windows it can be found under
+*\\\\wsl$\docker-desktop-data\data\docker\volumes*.  If a compatible Java
+installation is not available on the host system, you can also run
+*PasswordProtectorCli.jar* in the container and mount a volume containing the
+passwords file:
+
+```
+$ docker run -it -v <path to passwords file on host>:/data password_protector:latest
+# java -jar PasswordProtectorCli.jar -p /data/<passwords file>
 ```
 
 ## Future Tasks

@@ -17,7 +17,7 @@ public class PasswordProtectorCli {
     try {
       new MainMenu(ResourceBundle.getBundle("cli.StringsBundle", Locale.getDefault()), args);
     } catch (MissingResourceException e) {
-      new MainMenu(ResourceBundle.getBundle("cli.StringsBundle", new Locale("en", "US")), args);
+      new MainMenu(ResourceBundle.getBundle("cli.StringsBundle", new Locale.Builder().setLanguage("en").build()), args);
     }
   }
 
