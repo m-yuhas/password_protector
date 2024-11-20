@@ -74,7 +74,7 @@ $ curl -O https://download.java.net/java/GA/jdk14/076bab302c7b4508975440c56f6cc2
 $ tar xvf openjdk-14_linux-x64_bin.tar.gz
 ```
 
-* Copiez le répertoire que contient les fichiers binaires à /opt/:
+* Déplacez le répertoire que contient les fichiers binaires à /opt/:
 
 ```
 $ sudo mv jdk-14 /opt/
@@ -208,6 +208,34 @@ Pour décrypter un fichier:
 
 ```
 $ java -jar PasswordProtectorCli.jar -d -i <encrypted file> -o <output file>
+```
+
+## Compiler et Exécuter en Docker
+En plus, vous pouvez compiler le fichier jar en utilisant le fichier docker
+inclus:
+
+```
+docker build -t password_protector:latest .
+```
+
+Tandis que vous compilez l'image, *PasswordProtectorCli.jar* et
+*PasswordProtector.jar* seront ecrits à un volume alors ils peuvent être
+accédés même si le conteneur est arrêté. En Linux, vous pouvez trouver le
+volume sous */var/lib/docker/volumes*, mais en Windows vous le pouvez trouver
+sous *\\\\wsl$\docker-desktop-data\data\docker\volumes*.
+
+While building the image, *PasswordProtectorCli.jar* and
+*PasswordProtector.jar* will be written to a volume so that they can be
+accessed even when the container is not active.  On Linux, the volume can be
+found under */var/lib/docker/volumes*, while on Windows it can be found under
+*\\\\wsl$\docker-desktop-data\data\docker\volumes*.  If a compatible Java
+installation is not available on the host system, you can also run
+*PasswordProtectorCli.jar* in the container and mount a volume containing the
+passwords file:
+
+```
+$ docker run -it -v <path to passwords file on host>:/data password_protector:latest
+# java -jar PasswordProtectorCli.jar -p /data/<passwords file>
 ```
 
 ## Tâches Futures

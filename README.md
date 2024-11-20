@@ -219,7 +219,7 @@ docker build -t password_protector:latest .
 
 While building the image, *PasswordProtectorCli.jar* and
 *PasswordProtector.jar* will be written to a volume so that they can be
-accessed even when the container is not active.  On Linux, the volume can be
+accessed even when the container is stopped.  On Linux, the volume can be
 found under */var/lib/docker/volumes*, while on Windows it can be found under
 *\\\\wsl$\docker-desktop-data\data\docker\volumes*.  If a compatible Java
 installation is not available on the host system, you can also run
